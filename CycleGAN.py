@@ -192,4 +192,4 @@ class CycleGAN(op_base):
             write_image(generate, self.generate_image_path,write_shape)
         elif(self.test_type == 'A'):
             generate = self.sess.run(self.fake_x,feed_dict = {self.y:input_image})
-            write_image(generate,self.generate_image_path)
+            write_image(generate,self.generate_image_path,write_shape)
