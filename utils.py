@@ -1,0 +1,86 @@
+import numpy as np
+import os
+import cv2
+from op_base import op_base
+import tensorflow as tf
+
+
+def build_data():
+    data_name = 'apple2orange'
+    content_dir = 'trainB'
+
+    new_data_name = 'apple_orange'
+    content_path = os.path.join(new_data_name, content_dir)
+
+    count = 0
+
+    if (not os.path.exists(content_path)):
+        if (not os.path.exists(new_data_name)):
+            os.mkdir(new_data_name)
+        os.mkdir(content_path)
+
+    image_dir_path = os.path.join('data',data_name,content_dir)
+    picture_list = os.listdir(image_dir_path)
+    count = 0
+    for one in picture_list:
+        image_path = os.path.join(image_dir_path,one)
+        image = cv2.imread(image_path)
+        new_image = cv2.resize(image,(128,128),interpolation = cv2.INTER_LINEAR)
+        cv2.imwrite(os.path.join(content_path,one),new_image)
+        count += 1
+
+    if(count % 10 == 0):
+        print('finish count %s' % count)
+
+def rgb2float(input):
+    return input / 127.5 - 1
+
+def float2rgb(input):
+    return tf.image.convert_image_dtype((input + 1.0) / 2.0, tf.uint8)
+
+    # output = (input + 1) * 127.5
+    # output = output.astype(np.int16)
+
+
+def write_image(image_content,path):
+
+    image_content = tf.map_fn(float2rgb, image_content, dtype=tf.uint8).eval()
+    image_zip_content = zip(range(len(image_content)),image_content)
+    for key,one in image_zip_content:
+        one = one.reshape([self.input_image_height, self.input_image_weight, self.input_image_channels])
+        cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
+
+class reader(op_base):
+
+    def __init__(self,args):
+        op_base.__init__(self,args)
+
+    def build_batch(self,batch_time,data_list,data_path):
+
+        start_count = batch_time * self.batch_size
+        end_count = (batch_time + 1) * self.batch_size
+        choice_batch = data_list[start_count:end_count]
+        one_batch_shape = (1, self.input_image_height, self.input_image_weight, self.input_image_channels)
+        init_array = []
+
+        for one in choice_batch:
+            image_content = cv2.imread(os.path.join(data_path,one))
+            image_content = rgb2float(image_content)
+            image_content = np.reshape(image_content,one_batch_shape)
+            init_array.append(image_content)
+
+            # with open(os.path.join(data_path,one),'rb') as f:
+            #     image_content = f.read()
+            #     print(image_content)
+            #     standard_shape = (self.input_image_height, self.input_image_weight,self.input_image_channels)
+            #     image_content = tf.image.decode_jpeg(image_content, channels=standard_shape[-1])
+            #     image_content = tf.image.resize_images(image_content, size=standard_shape[:2])
+            #     image_content = rgb2float(image_content)
+            #     image_content = tf.reshape(image_content,one_batch_shape)
+            #     init_array.append(image_content)
+
+        init_array = np.concatenate(init_array,axis = 0)
+
+        return init_array
+
+
