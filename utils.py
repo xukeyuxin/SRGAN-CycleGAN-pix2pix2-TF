@@ -42,12 +42,12 @@ def float2rgb(input):
     # output = output.astype(np.int16)
 
 
-def write_image(image_content,path):
+def write_image(image_content,path,write_shape):
 
     image_content = tf.map_fn(float2rgb, image_content, dtype=tf.uint8).eval()
     image_zip_content = zip(range(len(image_content)),image_content)
     for key,one in image_zip_content:
-        one = one.reshape([self.input_image_height, self.input_image_weight, self.input_image_channels])
+        one = one.reshape(write_shape)
         cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
 
 class reader(op_base):
