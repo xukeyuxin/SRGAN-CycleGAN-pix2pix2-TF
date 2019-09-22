@@ -21,36 +21,41 @@ class generator(op_base):
         input_shape = input.get_shape().as_list()
         input_channel = input_shape[-1]
         with tf.variable_scope(self.name, reuse=self.reuse):
-            input_0 = ly.conv2d(input, 64, kernel_size=4, strides=2, name='g_conv_0')  # [ -1, 64,64,64]
+            input_0 = ly.conv2d(input, 64, kernel_size=4, strides=2, name='g_conv_0')  # [ -1, 128,128,64]
             input_0 = ly.bn_layer(input_0, name='g_bn_0')
 
-            input_1 = ly.conv2d(tf.nn.relu(input_0), 128, kernel_size=4, strides=2, name='g_conv_1')  # [ -1, 32,32,128]
+            input_1 = ly.conv2d(tf.nn.relu(input_0), 128, kernel_size=4, strides=2, name='g_conv_1')  # [ -1, 64,64,128]
             input_1 = ly.bn_layer(input_1, name='g_bn_1')
 
-            input_2 = ly.conv2d(tf.nn.relu(input_1), 256, kernel_size=4, strides=2, name='g_conv_2')  # [ -1, 16,16,256]
+            input_2 = ly.conv2d(tf.nn.relu(input_1), 256, kernel_size=4, strides=2, name='g_conv_2')  # [ -1, 32,32,256]
             input_2 = ly.bn_layer(input_2, name='g_bn_2')
 
-            input_3 = ly.conv2d(tf.nn.relu(input_2), 512, kernel_size=4, strides=2, name='g_conv_3')  # [ -1, 8,8,512]
+            input_3 = ly.conv2d(tf.nn.relu(input_2), 512, kernel_size=4, strides=2, name='g_conv_3')  # [ -1, 16,16,512]
             input_3 = ly.bn_layer(input_3, name='g_bn_3')
 
-            input_3_de = ly.deconv2d(tf.nn.relu(input_3), 512, 16, kernel_size=4, strides=2,
-                                     name='g_deconv_0')  # [-1,16,16,512]
+            deconv_height = input_3.get_shape().as_list()[1]
+            deconv_weight = input_3.get_shape().as_list()[2]
+
+            input_3_de = ly.deconv2d(tf.nn.relu(input_3), 512, deconv_height * 2, kernel_size=4, strides=2,
+                                     name='g_deconv_0')  # [-1,32,32,512]
             input_3_de = tf.nn.dropout(input_3_de, 0.2)
             input_3_de = ly.bn_layer(input_3_de, name='g_bn_4')
             input_3_de = tf.concat([input_3_de, input_2], axis=3)
 
-            input_2_de = ly.deconv2d(tf.nn.relu(input_3_de), 256, 32, kernel_size=4, strides=2,
-                                     name='g_deconv_1')  # [-1,32,32,256]
+            input_2_de = ly.deconv2d(tf.nn.relu(input_3_de), 256, deconv_height * 4, kernel_size=4, strides=2,
+                                     name='g_deconv_1')  # [-1,64,64,256]
             input_2_de = ly.bn_layer(input_2_de, name='g_bn_5')
             input_2_de = tf.concat([input_2_de, input_1], axis=3)
 
-            input_1_de = ly.deconv2d(tf.nn.relu(input_2_de), 128, 64, kernel_size=4, strides=2,
-                                     name='g_deconv_2')  # [-1,64,64,128]
+            input_1_de = ly.deconv2d(tf.nn.relu(input_2_de), 128, deconv_height * 8, kernel_size=4, strides=2,
+                                     name='g_deconv_2')  # [-1,128,128,128]
             input_1_de = ly.bn_layer(input_1_de, name='g_bn_6')
             input_1_de = tf.concat([input_1_de, input_0], axis=3)
 
-            input_0_de = ly.deconv2d(tf.nn.relu(input_1_de), 3, 128, kernel_size=4, strides=2,
-                                     name='g_deconv_3')  # [-1,128,128,3]
+
+            input_0_de = ly.deconv2d(tf.nn.relu(input_1_de), 3, deconv_height * 16, kernel_size=4, strides=2,
+                                     name='g_deconv_3')  # [-1,256,256,3]
+
             input_0_de = tf.nn.tanh(input_0_de)
 
         self.reuse = True
@@ -96,10 +101,10 @@ class CycleGAN(op_base):
 
     def cycle_consistency_loss(self):
 
-        G_loss = tf.reduce_mean(tf.abs(self.fake_x-self.y))
-        F_loss = tf.reduce_mean(tf.abs(self.fake_y-self.x))
+        G_loss = tf.reduce_mean(tf.abs(self.fake_x - self.y))
+        F_loss = tf.reduce_mean(tf.abs(self.fake_y - self.x))
 
-        return 10 * ( G_loss + F_loss )
+        return 10 * (G_loss + F_loss)
 
     def build_model(self):
 
@@ -121,8 +126,8 @@ class CycleGAN(op_base):
         cycle_loss = self.cycle_consistency_loss()
 
         ### g loss
-        self.g_loss = tf.reduce_mean( tf.squared_difference( self.real_label, self.fake_y ) ) + cycle_loss
-        self.f_loss = tf.reduce_mean( tf.squared_difference( self.real_label, self.fake_x ) ) + cycle_loss
+        self.g_loss = tf.reduce_mean(tf.squared_difference(self.real_label, self.fake_y)) + cycle_loss
+        self.f_loss = tf.reduce_mean(tf.squared_difference(self.real_label, self.fake_x)) + cycle_loss
 
         # self.g_loss = tf.reduce_mean( tf.squared_difference(tf.reshape(self.x, [self.batch_size, 128 * 128 * 3]),tf.reshape(self.F(self.fake_y), [self.batch_size, 128 * 128 * 3] ) ) )
         # self.f_loss = tf.reduce_mean( ly.l1_loss(tf.reshape(self.y, [self.batch_size, 128 * 128 * 3]),tf.reshape(self.G(self.fake_x), [self.batch_size, 128 * 128 * 3] ) ) )
@@ -133,14 +138,14 @@ class CycleGAN(op_base):
         #                                                         labels=tf.ones(shape=[self.batch_size, 1])) )
 
         ### use lsgan d_loss
-        self.Y_D_loss = tf.reduce_mean( tf.squared_difference(self.Y_D(self.y),self.real_label) ) + tf.reduce_mean( tf.square(self.Y_D(self.fake_y)) )
-        self.X_D_loss = tf.reduce_mean( tf.squared_difference(self.X_D(self.x),self.real_label) ) + tf.reduce_mean( tf.square(self.X_D(self.fake_x)) )
-
+        self.Y_D_loss = tf.reduce_mean(tf.squared_difference(self.Y_D(self.y), self.real_label)) + tf.reduce_mean(
+            tf.square(self.Y_D(self.fake_y)))
+        self.X_D_loss = tf.reduce_mean(tf.squared_difference(self.X_D(self.x), self.real_label)) + tf.reduce_mean(
+            tf.square(self.X_D(self.fake_x)))
 
         ### use sigmoid cross entropy
         # self.Y_D_loss = - tf.reduce_mean( tf.log( tf.nn.sigmiod(self.Y_D(self.y) ) ) + tf.log(1 - tf.nn.sigmiod(self.Y_D(self.fake_y)) ) ) / 2
         # self.X_D_loss = - tf.reduce_mean( tf.log(self.X_D(self.x) ) + tf.log(1 - self.X_D(self.fake_x)) ) / 2
-
 
         self.opt_g_Y = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss)
         self.opt_f_X = tf.train.AdamOptimizer(self.lr).minimize(self.f_loss)
@@ -155,7 +160,7 @@ class CycleGAN(op_base):
 
         optimizer = self.build_model()
         saver = tf.train.Saver()
-        if(self.pretrain):
+        if (self.pretrain):
             saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
             print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
         else:
@@ -176,15 +181,14 @@ class CycleGAN(op_base):
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
 
-                saver.save(self.sess, os.path.join(self.model_save_path, 'checkpoint'+ '-' + str(i) + '-' + str(batch_time)))
+                saver.save(self.sess,
+                           os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
                 print(g_loss, f_loss, Y_D_loss, X_D_loss)
 
-    def make_image(self,input_image):
-        if(self.test_type == 'B'):
-            generate = self.sess.run(self.fake_y,feed_dict = {self.x:input_image})
-            write_image(generate,self.generate_image_path)
+    def make_image(self, input_image):
+        if (self.test_type == 'B'):
+            generate = self.sess.run(self.fake_y, feed_dict={self.x: input_image})
+            write_image(generate, self.generate_image_path)
         # elif(self.test_type == 'B'):
         #     generate = self.sess.run(self.fake_x,feed_dict = {self.y:input_image})
         #     write_image(generate,self.generate_image_path)
-
-

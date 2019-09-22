@@ -10,6 +10,7 @@ import sys
 
 type = sys.argv[1]
 
+
 FLAGS = tf.flags.FLAGS
 
 tf.flags.DEFINE_integer('batch_size', 16, 'batch size, default: 16')
