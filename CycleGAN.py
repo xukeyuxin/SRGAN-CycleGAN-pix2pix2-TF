@@ -186,10 +186,9 @@ class CycleGAN(op_base):
                 print(g_loss, f_loss, Y_D_loss, X_D_loss)
 
     def make_image(self, input_image):
+        write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
         if (self.test_type == 'B'):
             generate = self.sess.run(self.fake_y, feed_dict={self.x: input_image})
-            write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
-            write_image(generate, self.generate_image_path,write_shape)
         elif(self.test_type == 'A'):
             generate = self.sess.run(self.fake_x,feed_dict = {self.y:input_image})
-            write_image(generate,self.generate_image_path,write_shape)
+        write_image(generate,self.generate_image_path,write_shape)
