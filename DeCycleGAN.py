@@ -101,10 +101,11 @@ class CycleGAN(op_base):
 
     def cycle_consistency_loss(self):
 
-        G_loss = tf.reduce_mean(tf.abs(self.G(self.fake_x) - self.y))
-        F_loss = tf.reduce_mean(tf.abs(self.F(self.fake_y) - self.x))
+        G_loss = tf.reduce_mean(tf.abs(self.fake_x - self.y))
+        F_loss = tf.reduce_mean(tf.abs(self.fake_y - self.x))
 
-        return 10 * (G_loss + F_loss)
+
+        return 50 * (G_loss + F_loss)
 
     def build_model(self):
 
@@ -179,8 +180,8 @@ class CycleGAN(op_base):
 
     def make_image(self, input_image):
         write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
-        if (self.test_type == 'A'):
+        if (self.test_type == 'B'):
             generate = self.sess.run(self.fake_y, feed_dict={self.x: input_image})
-        elif(self.test_type == 'B'):
+        elif(self.test_type == 'A'):
             generate = self.sess.run(self.fake_x,feed_dict = {self.y:input_image})
         write_image(generate,self.generate_image_path,write_shape)
