@@ -1,6 +1,6 @@
 import tensorflow as tf
 from utils import reader
-from DeCycleGAN import CycleGAN
+from CycleGAN import CycleGAN
 from CGAN import CGAN
 import numpy as np
 import os
@@ -17,6 +17,7 @@ if(len(sys_input) < 3):
 else:
     model = sys_input[1]
     type = sys_input[2]
+
 
 
 FLAGS = tf.flags.FLAGS
