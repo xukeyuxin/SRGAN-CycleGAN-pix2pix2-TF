@@ -86,7 +86,7 @@ class discriminator(op_base):
             input_3 = ly.conv2d(input_2, 512, kernel_size=4, strides=1, name='d_conv_3')  # [-1,8,8,512]
             input_3 = tf.nn.relu(ly.bn_layer(input_3, name='d_bn_3'))
 
-            input_3 = ly.conv2d(input_2, 1, kernel_size=4, strides=1, name='d_conv_4')
+            input_3 = ly.conv2d(input_2, 1, kernel_size=4, strides=1, name='d_conv_4',bias = True)
 
         self.reuse = True
         return input_3
@@ -104,7 +104,7 @@ class CycleGAN(op_base):
         G_loss = tf.reduce_mean(tf.abs(self.G(self.fake_x) - self.y))
         F_loss = tf.reduce_mean(tf.abs(self.F(self.fake_y) - self.x))
 
-        return 1 * (G_loss + F_loss)
+        return 5 * (G_loss + F_loss)
 
     def build_model(self):
 
