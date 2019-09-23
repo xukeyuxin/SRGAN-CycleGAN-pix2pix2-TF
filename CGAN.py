@@ -114,8 +114,8 @@ class CGAN(op_base):
         # ### use lsgan
         # self.d_loss = tf.reduce_mean(tf.square(self.d_fake)) + tf.reduce_mean(tf.suqared_diffrence(self.d_real - real_weight))
 
-        self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss)
-        self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss)
+        self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
+        self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
 
 
         ### check loss
@@ -156,7 +156,7 @@ class CGAN(op_base):
 
                     g_loss,d_loss,fake = self.sess.run(
                         [self.g_loss,self.d_loss,self.fake],
-                        feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
+                        feed_dict={self.y: y_b, self.z: self.z_sample()})
 
                     write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
                     write_image_gray(fake, self.generate_image_path, write_shape)
