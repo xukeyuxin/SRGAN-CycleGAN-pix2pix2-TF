@@ -101,8 +101,8 @@ class CycleGAN(op_base):
 
     def cycle_consistency_loss(self):
 
-        G_loss = tf.reduce_mean(tf.abs(self.fake_x - self.y))
-        F_loss = tf.reduce_mean(tf.abs(self.fake_y - self.x))
+        G_loss = tf.reduce_mean(tf.abs(self.G(self.fake_x) - self.y))
+        F_loss = tf.reduce_mean(tf.abs(self.F(self.fake_y) - self.x))
 
         return 10 * (G_loss + F_loss)
 
@@ -126,16 +126,8 @@ class CycleGAN(op_base):
         cycle_loss = self.cycle_consistency_loss()
 
         ### g loss
-        self.g_loss = tf.reduce_mean(tf.squared_difference(self.real_label, self.fake_y)) + cycle_loss
-        self.f_loss = tf.reduce_mean(tf.squared_difference(self.real_label, self.fake_x)) + cycle_loss
-
-        # self.g_loss = tf.reduce_mean( tf.squared_difference(tf.reshape(self.x, [self.batch_size, 128 * 128 * 3]),tf.reshape(self.F(self.fake_y), [self.batch_size, 128 * 128 * 3] ) ) )
-        # self.f_loss = tf.reduce_mean( ly.l1_loss(tf.reshape(self.y, [self.batch_size, 128 * 128 * 3]),tf.reshape(self.G(self.fake_x), [self.batch_size, 128 * 128 * 3] ) ) )
-
-        # Y_D_fake_loss = tf.reduce_mean( tf.nn.sigmoid_cross_entropy_with_logits(logits=Y_D(self.G(self.x)),
-        #                                                         labels=tf.zeros(shape=[self.batch_size, 1])) )
-        # Y_D_real_loss = tf.reduce_mean( tf.nn.sigmoid_cross_entropy_with_logits(logits=Y_D(self.y),
-        #                                                         labels=tf.ones(shape=[self.batch_size, 1])) )
+        self.g_loss = tf.reduce_mean(tf.squared_difference(self.real_label, self.Y_D(self.fake_y))) + cycle_loss
+        self.f_loss = tf.reduce_mean(tf.squared_difference(self.real_label, self.X_D(self.fake_x))) + cycle_loss
 
         ### use lsgan d_loss
         self.Y_D_loss = tf.reduce_mean(tf.squared_difference(self.Y_D(self.y), self.real_label)) + tf.reduce_mean(
@@ -144,8 +136,8 @@ class CycleGAN(op_base):
             tf.square(self.X_D(self.fake_x)))
 
         ### use sigmoid cross entropy
-        # self.Y_D_loss = - tf.reduce_mean( tf.log( tf.nn.sigmiod(self.Y_D(self.y) ) ) + tf.log(1 - tf.nn.sigmiod(self.Y_D(self.fake_y)) ) ) / 2
-        # self.X_D_loss = - tf.reduce_mean( tf.log(self.X_D(self.x) ) + tf.log(1 - self.X_D(self.fake_x)) ) / 2
+        # self.Y_D_loss = - tf.reduce_mean( tf.log( tf.nn.sigmiod(self.Y_D(self.y) ) ) - tf.log(1 - tf.nn.sigmiod(self.Y_D(self.fake_y)) ) ) / 2
+        # self.X_D_loss = - tf.reduce_mean( tf.log(self.X_D(self.x) ) - tf.log(1 - self.X_D(self.fake_x)) ) / 2
 
         self.opt_g_Y = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss)
         self.opt_f_X = tf.train.AdamOptimizer(self.lr).minimize(self.f_loss)
@@ -166,8 +158,8 @@ class CycleGAN(op_base):
         else:
             print('start training')
             self.sess.run(tf.global_variables_initializer())
-            x_data_path = os.path.join('data', self.data_name, 'trainA')
-            y_data_path = os.path.join('data', self.data_name, 'trainB')
+            x_data_path = os.path.join('data',self.model, self.data_name, 'trainA')
+            y_data_path = os.path.join('data',self.model, self.data_name, 'trainB')
             x_data_list = os.listdir(x_data_path)
             y_data_list = os.listdir(y_data_path)
 

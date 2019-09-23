@@ -62,8 +62,7 @@ def dilated_conv2d(input, output_shape, rate=3, kernel_size=3, padding='SAME',na
     return conv
 
 
-def fc(input, output_shape, name=None, bias=False):
-    initializer = tf.random_normal_initializer(mean=0., stddev=0.02)
+def fc(input, output_shape, name=None, bias=False,initializer = tf.random_normal_initializer(mean=0., stddev=0.02)):
     input_shape = input.get_shape().as_list()
     input = tf.reshape(input, [-1, reduce(lambda x, y: x * y, input_shape[1:])])
 
