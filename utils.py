@@ -41,6 +41,8 @@ def float2rgb(input):
     # output = (input + 1) * 127.5
     # output = output.astype(np.int16)
 
+def float2gray(input):
+    return tf.image.convert_image_dtype(input,tf.uint8)
 
 def write_image(image_content,path,write_shape):
 
@@ -48,6 +50,14 @@ def write_image(image_content,path,write_shape):
     image_zip_content = zip(range(len(image_content)),image_content)
     for key,one in image_zip_content:
         one = one.reshape(write_shape)
+        cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
+
+def write_image_gray(image_content,path,write_shape):
+    image_content = tf.map_fn(float2gray, image_content, dtype=tf.uint8).eval()
+    image_zip_content = zip(range(len(image_content)),image_content)
+    for key,one in image_zip_content:
+        one = one.reshape(write_shape)
+        print(one)
         cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
 
 class reader(op_base):

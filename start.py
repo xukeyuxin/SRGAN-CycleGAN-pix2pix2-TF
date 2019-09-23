@@ -36,18 +36,17 @@ tf.flags.DEFINE_string('test_type', 'A', 'test_type, default: A')
 tf.flags.DEFINE_integer('epoch', 1, 'test_type, default: 1000')
 tf.flags.DEFINE_float('real_label', 0.9, 'real_label, default: 0.9')
 
-tf.flags.DEFINE_string('data_name', 'horse_zebra_256', 'test_type, default: apple_orange')
-
-
-tf.flags.DEFINE_integer('label_embedding_size', 10, 'label_embedding_size, default: 10')
-tf.flags.DEFINE_integer('input_noise_size', 100, 'input_noise_size, default: 100')
 
 if(model == 'CycleGAN'):
+    tf.flags.DEFINE_string('data_name', 'horse_zebra_256', 'test_type, default: apple_orange')
     tf.flags.DEFINE_integer('input_image_weight', 256, 'image size, default: 128')
     tf.flags.DEFINE_integer('input_image_height', 256, 'image size, default: 128')
     tf.flags.DEFINE_integer('input_image_channels', 3, 'image size, default: 3')
 
 elif(model == 'CGAN'):
+    tf.flags.DEFINE_integer('label_embedding_size', 10, 'label_embedding_size, default: 10')
+    tf.flags.DEFINE_integer('input_noise_size', 100, 'input_noise_size, default: 100')
+    tf.flags.DEFINE_string('data_name', 'mnist', 'test_type, default: mnist')
     tf.flags.DEFINE_integer('input_image_weight', 28, 'image size, default: 128')
     tf.flags.DEFINE_integer('input_image_height', 28, 'image size, default: 128')
     tf.flags.DEFINE_integer('input_image_channels', 1, 'image size, default: 3')
@@ -93,11 +92,13 @@ def testCycleGAN():
             else:
                 test_image_content = np.concatenate([test_image_content,content])
 
-        Net.train()
-        Net.make_image(test_image_content)
+        Net.test(test_image_content)
 
 def testCGAN():
-    pass
+    with tf.Session() as sess:
+        Net = CGAN(sess,FLAGS,reader)
+        Net.test()
+
 
 
 test_func = {'CycleGAN':testCycleGAN,

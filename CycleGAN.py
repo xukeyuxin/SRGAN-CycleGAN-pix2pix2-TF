@@ -86,7 +86,8 @@ class discriminator(op_base):
             input_3 = ly.conv2d(input_2, 512, kernel_size=4, strides=1, name='d_conv_3')  # [-1,8,8,512]
             input_3 = tf.nn.relu(ly.bn_layer(input_3, name='d_bn_3'))
 
-            input_3 = ly.conv2d(input_2, 1, kernel_size=4, strides=1, name='d_conv_4',bias = True)
+            input_4 = ly.conv2d(input_3, 1, kernel_size=4, strides=1, name='d_conv_4',bias = True)
+
 
         self.reuse = True
         return input_3
@@ -177,7 +178,8 @@ class CycleGAN(op_base):
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
                 print(g_loss, f_loss, Y_D_loss, X_D_loss)
 
-    def make_image(self, input_image):
+    def test(self, input_image):
+        self.train()
         write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
         if (self.test_type == 'A'):
             generate = self.sess.run(self.fake_y, feed_dict={self.x: input_image})

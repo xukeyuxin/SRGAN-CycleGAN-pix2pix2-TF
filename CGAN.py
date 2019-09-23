@@ -2,8 +2,9 @@ import tensorflow as tf
 import numpy as np
 import layers as ly
 from op_base import op_base
-from utils import mnist
+from utils import *
 from tqdm import tqdm
+import os
 
 
 class generator(object):
@@ -50,18 +51,19 @@ class discriminator(object):
             input = tf.nn.leaky_relu(input)
 
             output_d = ly.fc(input, 1,name = 'fc_0')
-            input = ly.bn_layer(input, name='bn_2')
-            input = tf.nn.sigmoid(input)
+            output_d = ly.bn_layer(input, name='bn_2')
+            output_d = tf.nn.sigmoid(output_d)
 
-            output_label = ly.fc(input, 128,name = 'label_fc_0')
-            input = ly.bn_layer(input, name='bn_3')
-            input = tf.nn.leaky_relu(input)
+            # output_label = ly.fc(input, 128,name = 'label_fc_0')
+            # input = ly.bn_layer(input, name='bn_3')
+            # input = tf.nn.leaky_relu(input)
+            #
+            # output_label = ly.fc(input, 1,name = 'label_fc_1')
+            # input = ly.bn_layer(input, name='bn_4')
+            # input = tf.nn.sigmoid(input)
 
-            output_label = ly.fc(input, 1,name = 'label_fc_1')
-            input = ly.bn_layer(input, name='bn_4')
-            input = tf.nn.sigmoid(input)
+        return output_d
 
-        return output_d, output_label
     @property
     def vars(self):
         return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope = self.name)
@@ -89,15 +91,15 @@ class CGAN(op_base):
         self.D = discriminator('D')
 
         self.fake = self.G(tf.concat([self.z,self.y],axis = 1))
+        expand_dim_y = tf.reshape(self.y,[self.batch_size,1,1,self.label_embedding_size]) * tf.ones(shape = [self.batch_size,28,28,self.label_embedding_size],dtype = tf.float32 )
 
-        expand_dim_y = tf.reshape(self.y,[self.batch_size,1,1,self.label_embedding_size])
-        self.d_real,_ = self.D(self.x * expand_dim_y)
-        self.d_fake,_ = self.D(self.fake * expand_dim_y)
+        self.d_real = self.D(tf.concat([self.x, expand_dim_y],axis = 3))
+        self.d_fake = self.D(tf.concat([self.fake, expand_dim_y],axis = 3))
 
 
         safe_log = 1e-12
         ### use cross entropy (safe log)
-        self.g_loss = -tf.reduce_mean( tf.log( self.d_fake + safe_log) )
+        self.g_loss = - tf.reduce_mean( tf.log( self.d_fake + safe_log) )
 
         # ### use lsgan
         # real_weight = 0.9
@@ -113,19 +115,25 @@ class CGAN(op_base):
         self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss)
         self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss)
 
-        return self.opt_g, self.opt_d
 
-        # with tf.control_dependencies([self.opt_g, self.opt_l]):
-        #     return tf.no_op(name='optimizer')
+        ### check loss
+        self.check_d_real = tf.reduce_mean(self.d_real)
+        self.check_d_fake = tf.reduce_mean(self.d_fake)
+
+        # return self.opt_g, self.opt_d
+
+        with tf.control_dependencies([self.opt_g, self.opt_d]):
+            return tf.no_op(name='optimizer')
 
     def z_sample(self):
         return np.random.uniform(-1.,1.,size = [self.batch_size,self.input_noise_size])
 
     def train(self):
-        opt_g, opt_d = self.build_model()
+        # opt_g, opt_d = self.build_model()
+        optimizer = self.build_model()
         saver = tf.train.Saver()
         if(self.pretrain):
-            self.sess.restore(tf.train.latest_checkpoint(self.model_save_path))
+            saver.restore(self.sess,tf.train.latest_checkpoint(self.model_save_path))
         else:
             self.sess.run(tf.global_variables_initializer())
             print('start train')
@@ -133,13 +141,24 @@ class CGAN(op_base):
                 X_b, y_b = self.data(self.batch_size)
 
                 for i in range(1):
-                    _,d_loss = self.sess.run([opt_d,self.d_loss],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
+                    _,d_loss,g_loss,fake = self.sess.run([optimizer,self.d_loss,self.g_loss,self.fake],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
 
-                for i in range(1):
-                    _,g_loss = self.sess.run([opt_g,self.g_loss],feed_dict = {self.y:y_b,self.z:self.z_sample()})
-
-                if(num % 100 == 0):
+                if(num % 1000 == 0):
+                    write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
+                    write_image_gray(fake, self.generate_image_path, write_shape)
+                    saver.save(self.sess,os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(num)))
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
+
+
+    def test(self):
+        self.train()
+        X_b, y_b = self.data(self.batch_size)
+        fake = self.sess.run(
+                self.fake,
+                feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
+        write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
+        write_image_gray(fake,self.generate_image_path,write_shape)
+
 
 
 
