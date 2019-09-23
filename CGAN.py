@@ -82,9 +82,9 @@ class CGAN(op_base):
 
     def build_model(self):
 
-        self.x = tf.placeholder(tf.float32,[self.batch_size,self.input_image_weight, self.input_image_height, self.input_image_channels]) ### real image
-        self.z = tf.placeholder(tf.float32,[self.batch_size,self.input_noise_size])
-        self.y = tf.placeholder(tf.float32,[self.batch_size,self.label_embedding_size])
+        self.x = tf.placeholder(tf.float32,shape = [self.batch_size,self.input_image_weight, self.input_image_height, self.input_image_channels]) ### real image
+        self.z = tf.placeholder(tf.float32,shape = [self.batch_size,self.input_noise_size])
+        self.y = tf.placeholder(tf.float32,shape = [self.batch_size,self.label_embedding_size])
 
         # self.g = self.generotor(tf.concat([self.z,self.y],axis = 1))
         self.G = generator('G')
@@ -141,14 +141,14 @@ class CGAN(op_base):
             print('start train')
             for num in range(1000000):
                 X_b, y_b = self.data(self.batch_size)
+                print('find path')
+                print(X_b.shape)
+                print(y_b.shape)
 
-                self.sess.run(
-                    opt_d,
+                _d,_g = self.sess.run(
+                    [opt_d,opt_g],
                     feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
-                self.sess.run(
-                    opt_g,
-                    feed_dict={self.y: y_b, self.z: self.z_sample()}
-                )
+
                 # for i in range(1):
                 #     _,d_loss,g_loss,fake = self.sess.run([optimizer,self.d_loss,self.g_loss,self.fake],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
 
@@ -156,7 +156,7 @@ class CGAN(op_base):
 
                     g_loss,d_loss,fake = self.sess.run(
                         [self.g_loss,self.d_loss,self.fake],
-                        feed_dict={self.y: y_b, self.z: self.z_sample()})
+                        feed_dict={self.x:X_b,self.y: y_b, self.z: self.z_sample()})
 
                     write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
                     write_image_gray(fake, self.generate_image_path, write_shape)
