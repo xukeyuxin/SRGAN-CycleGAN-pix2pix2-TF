@@ -27,10 +27,8 @@ class op_base(object):
         self.test_type = args.test_type
 
 
-        self.model_save_path = os.path.join('model',self.model,self.data_name)
+        self.model_save_path = os.path.join('model',self.model)
         if ( not os.path.exists(self.model_save_path) ):
-            if(not os.path.exists(os.path.join('model',self.model))):
-                os.mkdir(os.path.join('model',self.model))
             os.mkdir(self.model_save_path)
 
         self.generate_image_path = os.path.join('data',self.model,self.data_name + '_generate_image')
