@@ -101,10 +101,14 @@ class CycleGAN(op_base):
 
     def cycle_consistency_loss(self):
 
-        G_loss = tf.reduce_mean(tf.abs(self.G(self.fake_x) - self.y))
-        F_loss = tf.reduce_mean(tf.abs(self.F(self.fake_y) - self.x))
+        # G_loss = tf.reduce_mean(tf.abs(self.G(self.fake_x) - self.y))
+        # F_loss = tf.reduce_mean(tf.abs(self.F(self.fake_y) - self.x))
 
-        return 5 * (G_loss + F_loss)
+        G_loss = tf.reduce_mean(tf.abs(self.fake_x - self.y))
+        F_loss = tf.reduce_mean(tf.abs(self.fake_y - self.x))
+
+
+        return 10 * (G_loss + F_loss)
 
     def build_model(self):
 
