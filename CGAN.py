@@ -138,7 +138,7 @@ class CGAN(op_base):
                 for i in range(1):
                     _,g_loss = self.sess.run([opt_g,self.g_loss],feed_dict = {self.y:y_b,self.z:self.z_sample()})
 
-                if(num == 100):
+                if(num % 100 == 0):
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
 
 
