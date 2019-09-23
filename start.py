@@ -1,6 +1,6 @@
 import tensorflow as tf
 from utils import reader
-from CycleGAN import CycleGAN
+from DeCycleGAN import CycleGAN
 from CGAN import CGAN
 import numpy as np
 import os
