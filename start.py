@@ -35,10 +35,11 @@ tf.flags.DEFINE_string('test_type', 'A', 'test_type, default: A')
 
 
 tf.flags.DEFINE_float('real_label', 0.9, 'real_label, default: 0.9')
+tf.flags.DEFINE_integer('max_to_keep', 5, 'real_label, default: 5')
 
 
 if(model == 'CycleGAN'):
-    tf.flags.DEFINE_integer('epoch', 50, 'test_type, default: 1000')
+    tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
     tf.flags.DEFINE_string('data_name', 'horse_zebra_256', 'test_type, default: apple_orange')
     tf.flags.DEFINE_integer('input_image_weight', 256, 'image size, default: 128')
     tf.flags.DEFINE_integer('input_image_height', 256, 'image size, default: 128')

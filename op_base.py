@@ -24,6 +24,7 @@ class op_base(object):
         self.lr = args.lr
         self.pretrain = args.pretrain
         self.real_label = args.real_label
+        self.max_to_keep = args.max_to_keep
 
         self.test_type = args.test_type
 
