@@ -71,7 +71,7 @@ def testCycleGAN():
 
     with tf.Session() as sess:
         Net = CycleGAN(sess,FLAGS,reader)
-        test_image_dir = os.path.join('data',self.model,FLAGS.data_name,'test' + FLAGS.test_type)
+        test_image_dir = os.path.join('data',FLAGS.model,FLAGS.data_name,'test' + FLAGS.test_type)
         test_image_list =  os.listdir(test_image_dir)
         random.shuffle(test_image_list)
         test_image_content = np.array([])
