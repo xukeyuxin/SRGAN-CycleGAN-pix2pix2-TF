@@ -141,9 +141,6 @@ class CGAN(op_base):
             print('start train')
             for num in range(1000000):
                 X_b, y_b = self.data(self.batch_size)
-                print('find path')
-                print(X_b.shape)
-                print(y_b.shape)
 
                 _d,_g = self.sess.run(
                     [opt_d,opt_g],
