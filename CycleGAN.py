@@ -62,6 +62,12 @@ class generator(op_base):
 
         return input_0_de
 
+    @property
+    def vars(self):
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope = self.name)
+
+
+
 
 class discriminator(op_base):
     def __init__(self, name, args):
@@ -91,6 +97,12 @@ class discriminator(op_base):
 
         self.reuse = True
         return input_3
+
+    @property
+    def vars(self):
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope = self.name)
+
+
 
 
 class CycleGAN(op_base):
@@ -140,11 +152,11 @@ class CycleGAN(op_base):
         # self.Y_D_loss = - tf.reduce_mean( tf.log( tf.nn.sigmiod(self.Y_D(self.y) ) ) - tf.log(1 - tf.nn.sigmiod(self.Y_D(self.fake_y)) ) ) / 2
         # self.X_D_loss = - tf.reduce_mean( tf.log(self.X_D(self.x) ) - tf.log(1 - self.X_D(self.fake_x)) ) / 2
 
-        self.opt_g_Y = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss)
-        self.opt_f_X = tf.train.AdamOptimizer(self.lr).minimize(self.f_loss)
+        self.opt_g_Y = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
+        self.opt_f_X = tf.train.AdamOptimizer(self.lr).minimize(self.f_loss,var_list = self.F.vars)
 
-        self.opt_d_Y = tf.train.AdamOptimizer(self.lr).minimize(self.Y_D_loss)
-        self.opt_d_X = tf.train.AdamOptimizer(self.lr).minimize(self.X_D_loss)
+        self.opt_d_Y = tf.train.AdamOptimizer(self.lr).minimize(self.Y_D_loss,var_list = self.Y_D.vars)
+        self.opt_d_X = tf.train.AdamOptimizer(self.lr).minimize(self.X_D_loss,var_list = self.X_D.vars)
 
         with tf.control_dependencies([self.opt_d_Y, self.opt_g_Y, self.opt_d_X, self.opt_f_X]):
             return tf.no_op(name='optimizer')
