@@ -161,7 +161,7 @@ class CGAN(op_base):
 
                     write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
                     write_image_gray(fake, self.generate_image_path, write_shape)
-                    saver.save(self.sess,os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(num)))
+                    saver.save(self.sess,os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
 
 
