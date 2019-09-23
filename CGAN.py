@@ -142,21 +142,20 @@ class CGAN(op_base):
             for num in range(1000000):
                 X_b, y_b = self.data(self.batch_size)
 
-                d_loss = self.sess.run(
+                self.sess.run(
                     opt_d,
                     feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
-                g_loss = self.sess.run(
+                self.sess.run(
                     opt_g,
                     feed_dict={self.y: y_b, self.z: self.z_sample()}
                 )
-
                 # for i in range(1):
                 #     _,d_loss,g_loss,fake = self.sess.run([optimizer,self.d_loss,self.g_loss,self.fake],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
 
                 if(num % 1000 == 0):
 
-                    fake = self.sess.run(
-                        self.fake,
+                    g_loss,d_loss,fake = self.sess.run(
+                        [self.g_loss,self.d_loss,self.fake],
                         feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
 
                     write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
