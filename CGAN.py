@@ -122,17 +122,17 @@ class CGAN(op_base):
         self.check_d_real = tf.reduce_mean(self.d_real)
         self.check_d_fake = tf.reduce_mean(self.d_fake)
 
-        # return self.opt_g, self.opt_d
+        return self.opt_g, self.opt_d
 
-        with tf.control_dependencies([self.opt_g, self.opt_d]):
-            return tf.no_op(name='optimizer')
+        # with tf.control_dependencies([self.opt_g, self.opt_d]):
+        #     return tf.no_op(name='optimizer')
 
     def z_sample(self):
         return np.random.uniform(-1.,1.,size = [self.batch_size,self.input_noise_size])
 
     def train(self):
-        # opt_g, opt_d = self.build_model()
-        optimizer = self.build_model()
+        opt_g, opt_d = self.build_model()
+        # optimizer = self.build_model()
         saver = tf.train.Saver()
         if(self.pretrain):
             saver.restore(self.sess,tf.train.latest_checkpoint(self.model_save_path))
@@ -142,10 +142,23 @@ class CGAN(op_base):
             for num in range(1000000):
                 X_b, y_b = self.data(self.batch_size)
 
-                for i in range(1):
-                    _,d_loss,g_loss,fake = self.sess.run([optimizer,self.d_loss,self.g_loss,self.fake],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
+                d_loss = self.sess.run(
+                    opt_d,
+                    feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
+                g_loss = self.sess.run(
+                    opt_g,
+                    feed_dict={self.y: y_b, self.z: self.z_sample()}
+                )
+
+                # for i in range(1):
+                #     _,d_loss,g_loss,fake = self.sess.run([optimizer,self.d_loss,self.g_loss,self.fake],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
 
                 if(num % 1000 == 0):
+
+                    fake = self.sess.run(
+                        self.fake,
+                        feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
+
                     write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
                     write_image_gray(fake, self.generate_image_path, write_shape)
                     saver.save(self.sess,os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(num)))

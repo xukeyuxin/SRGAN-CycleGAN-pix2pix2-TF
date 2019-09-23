@@ -57,7 +57,6 @@ def write_image_gray(image_content,path,write_shape):
     image_zip_content = zip(range(len(image_content)),image_content)
     for key,one in image_zip_content:
         one = one.reshape(write_shape)
-        print(one)
         cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
 
 class reader(op_base):
