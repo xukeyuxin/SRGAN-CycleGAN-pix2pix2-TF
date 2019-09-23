@@ -99,7 +99,8 @@ class CGAN(op_base):
 
         safe_log = 1e-12
         ### use cross entropy (safe log)
-        self.g_loss = - tf.reduce_mean( tf.log( self.d_fake + safe_log) )
+        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.ones_like(self.d_fake)) )
+        # self.g_loss = - tf.reduce_mean( tf.log( self.d_fake + safe_log) )
 
         # ### use lsgan
         # real_weight = 0.9
@@ -107,7 +108,8 @@ class CGAN(op_base):
         # # self.g_loss = tf.reduce_mean( tf.squared_difference(real_weight,d_fake) ) + 5 * tf.squared_difference(self.fake,self.x)
 
         ### use cross entropy (safe log)
-        self.d_loss = -tf.reduce_mean(tf.log( 1 - self.d_fake + safe_log )) - tf.reduce_mean( tf.log(self.d_real + safe_log ))
+        self.d_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.zeros_like(self.d_fake)) ) + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_real,labels = tf.ones_like(self.d_real)) )
+        # self.d_loss = -tf.reduce_mean(tf.log( 1 - self.d_fake + safe_log )) - tf.reduce_mean( tf.log(self.d_real + safe_log ))
 
         # ### use lsgan
         # self.d_loss = tf.reduce_mean(tf.square(self.d_fake)) + tf.reduce_mean(tf.suqared_diffrence(self.d_real - real_weight))
