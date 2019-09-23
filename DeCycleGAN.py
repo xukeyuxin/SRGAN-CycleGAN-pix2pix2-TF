@@ -105,7 +105,7 @@ class CycleGAN(op_base):
         F_loss = tf.reduce_mean(tf.abs(self.fake_y - self.x))
 
 
-        return 50 * (G_loss + F_loss)
+        return 100 * (G_loss + F_loss)
 
     def build_model(self):
 
