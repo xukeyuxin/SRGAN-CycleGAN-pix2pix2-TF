@@ -3,7 +3,7 @@ import os
 import cv2
 from op_base import op_base
 import tensorflow as tf
-
+from tensorflow.examples.tutorials.mnist import input_data
 
 def build_data():
     data_name = 'apple2orange'
@@ -86,7 +86,7 @@ class reader(op_base):
 
 class mnist():
 	def __init__(self, flag='conv', is_tanh = False):
-		datapath = prefix + 'mnist'
+		datapath = 'data/CGAN/mnist'
 		self.X_dim = 784 # for mlp
 		self.z_dim = 100
 		self.y_dim = 10
