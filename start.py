@@ -33,7 +33,7 @@ else:
 
 tf.flags.DEFINE_string('test_type', 'A', 'test_type, default: A')
 
-tf.flags.DEFINE_integer('epoch', 1, 'test_type, default: 1000')
+tf.flags.DEFINE_integer('epoch', 10, 'test_type, default: 1000')
 tf.flags.DEFINE_float('real_label', 0.9, 'real_label, default: 0.9')
 
 
