@@ -161,14 +161,14 @@ class CycleGAN(op_base):
         with tf.control_dependencies([self.opt_d_Y, self.opt_g_Y, self.opt_d_X, self.opt_f_X]):
             return tf.no_op(name='optimizer')
 
-    def train(self):
+    def train(self,need_train = True):
 
         optimizer = self.build_model()
         saver = tf.train.Saver()
         if (self.pretrain):
             saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
             print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
-        else:
+        if(need_train):
             print('start training')
             self.sess.run(tf.global_variables_initializer())
             x_data_path = os.path.join('data',self.model, self.data_name, 'trainA')
@@ -191,7 +191,7 @@ class CycleGAN(op_base):
                 print(g_loss, f_loss, Y_D_loss, X_D_loss)
 
     def test(self, input_image):
-        self.train()
+        self.train(need_train = False)
         write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
         if (self.test_type == 'A'):
             generate = self.sess.run(self.fake_y, feed_dict={self.x: input_image})
