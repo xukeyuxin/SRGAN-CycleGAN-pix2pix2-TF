@@ -135,15 +135,11 @@ class CGAN(op_base):
         self.g_loss = - tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_fake) + safe_log) )
         # self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.ones_like(self.d_fake)) )
 
-        self.d_loss = -tf.reduce_mean(tf.log( 1 - tf.nn.sigmoid(self.d_fake) + safe_log )) - tf.reduce_mean( tf.log(tf.nn.sigmoid(self.d_real) + safe_log ))
+        self.d_loss = tf.reduce_mean(tf.log( tf.nn.sigmoid(self.d_fake) + safe_log )) - tf.reduce_mean( tf.log(tf.nn.sigmoid(self.d_real) + safe_log ))
         # self.d_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.zeros_like(self.d_fake)) ) + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_real,labels = tf.ones_like(self.d_real)) )
 
         self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
         self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
-
-        ### check loss
-        self.check_d_real = tf.reduce_mean(self.d_real)
-        self.check_d_fake = tf.reduce_mean(self.d_fake)
 
         with tf.control_dependencies([self.opt_g, self.opt_d]):
             return tf.no_op(name='dc_cgan_optimizer')
@@ -273,9 +269,6 @@ class CGAN(op_base):
 
                     saver.save(self.sess, os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
-
-
-
 
 
 
