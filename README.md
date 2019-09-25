@@ -2,6 +2,7 @@
 
 ## CGAN
 ### classifier_w_cgan
+```js
 Iter: 0; D loss: -7.483e-10; G_loss: 2.384; C_loss: 2.363
 Iter: 200; D loss: 1.999e-10; G_loss: 0.3472; C_loss: 0.3848
 Iter: 400; D loss: -3.241e-10; G_loss: 0.4719; C_loss: 0.2433
@@ -12,7 +13,9 @@ Iter: 1200; D loss: 2.114e-09; G_loss: 0.1618; C_loss: 0.07985
 Iter: 1400; D loss: 2.321e-09; G_loss: 0.4315; C_loss: 0.1402
 Iter: 1600; D loss: 2.21e-09; G_loss: 0.1784; C_loss: 0.01205
 Iter: 1800; D loss: -6.025e-10; G_loss: 0.3059; C_loss: 0.1686
+```
 ### dc_ls_cgan
+```js
 Iter: 0; D loss: 0.5339; G_loss: 0.2573
 Iter: 200; D loss: 0.5025; G_loss: 0.2468
 Iter: 400; D loss: 0.4917; G_loss: 0.2385
@@ -23,7 +26,9 @@ Iter: 1200; D loss: 0.4962; G_loss: 0.2277
 Iter: 1400; D loss: 0.4868; G_loss: 0.2219
 Iter: 1600; D loss: 0.4874; G_loss: 0.221
 Iter: 1800; D loss: 0.482; G_loss: 0.2171
+```
 ### dc_cgan
+```js
 Iter: 0; D loss: 1.608; G_loss: 0.8043
 Iter: 200; D loss: 1.56; G_loss: 0.7695
 Iter: 400; D loss: 1.558; G_loss: 0.7598
@@ -37,3 +42,4 @@ Iter: 1800; D loss: 1.504; G_loss: 0.7107
 Iter: 2000; D loss: 1.505; G_loss: 0.7124
 Iter: 2200; D loss: 1.485; G_loss: 0.7037
 Iter: 2400; D loss: 1.473; G_loss: 0.6994
+```
