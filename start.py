@@ -46,6 +46,7 @@ if(model == 'CycleGAN'):
     tf.flags.DEFINE_integer('input_image_channels', 3, 'image size, default: 3')
 
 elif(model == 'CGAN'):
+    tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
     tf.flags.DEFINE_integer('label_embedding_size', 10, 'label_embedding_size, default: 10')
     tf.flags.DEFINE_integer('input_noise_size', 100, 'input_noise_size, default: 100')
     tf.flags.DEFINE_string('data_name', 'mnist', 'test_type, default: mnist')

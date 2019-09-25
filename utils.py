@@ -56,6 +56,7 @@ def write_image_gray(image_content,path,write_shape):
     image_content = tf.map_fn(float2gray, image_content, dtype=tf.uint8).eval()
     image_zip_content = zip(range(len(image_content)),image_content)
     for key,one in image_zip_content:
+        print(one)
         one = one.reshape(write_shape)
         cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
 

@@ -76,21 +76,25 @@ class classifier(object):
         self.name = name
         self.reuse = tf.AUTO_REUSE
     def __call__(self,input):
-        with tf.variable_scope(self.name,resue = self.reuse):
+        with tf.variable_scope(self.name,reuse = self.reuse):
+
+
+
             input = ly.conv2d(input,64,strides = 2,name = 'conv2d_0') # 14 14 64
             input = ly.bn_layer(input,name = 'bn_0')
             input = tf.nn.relu(input)
 
-            input = ly.conv2d(input,128,strides = 2,name = 'conv2d_0') # 7 7 128
-            input = ly.bn_layer(input,name = 'bn_0')
+            input = ly.conv2d(input,128,strides = 2,name = 'conv2d_1') # 7 7 128
+            input = ly.bn_layer(input,name = 'bn_1')
             input = tf.nn.relu(input)
 
 
             input = ly.fc(input,1024,name = 'fc_0')
             input = tf.nn.relu(input)
 
-            input = ly.fc(input, 10, name='fc_0')
-            input = tf.nn.sigmiod(input)
+            input = ly.fc(input, 10, name='fc_1')
+
+        return input
 
     @property
     def vars(self):
@@ -128,10 +132,10 @@ class CGAN(op_base):
 
         safe_log = 1e-12
         ### use cross entropy (safe log)
-        self.g_loss = - tf.reduce_mean( tf.log( tf.nn.sigmiod(self.d_fake) + safe_log) )
+        self.g_loss = - tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_fake) + safe_log) )
         # self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.ones_like(self.d_fake)) )
 
-        self.d_loss = -tf.reduce_mean(tf.log( 1 - tf.nn.sigmiod(self.d_fake) + safe_log )) - tf.reduce_mean( tf.log(tf.nn.sigmiod(self.d_real) + safe_log ))
+        self.d_loss = -tf.reduce_mean(tf.log( 1 - tf.nn.sigmoid(self.d_fake) + safe_log )) - tf.reduce_mean( tf.log(tf.nn.sigmoid(self.d_real) + safe_log ))
         # self.d_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.zeros_like(self.d_fake)) ) + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_real,labels = tf.ones_like(self.d_real)) )
 
         self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
@@ -161,8 +165,8 @@ class CGAN(op_base):
 
         ### use lsgan
         real_weight = 0.95
-        self.g_loss = tf.reduce_mean( tf.square( d_fake - real_weight ) )
-        self.d_loss = tf.reduce_mean(tf.square(self.d_fake)) + tf.reduce_mean(tf.suqare(self.d_real-real_weight))
+        self.g_loss = tf.reduce_mean( tf.square( self.d_fake - real_weight ) )
+        self.d_loss = tf.reduce_mean(tf.square(self.d_fake)) + tf.reduce_mean(tf.square(self.d_real-real_weight))
 
         self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
         self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
@@ -183,14 +187,23 @@ class CGAN(op_base):
 
         self.d_real = self.D(self.x)
         self.d_fake = self.D(self.fake)
+        self.c_real = self.C(self.x)
         self.c_fake = self.C(self.fake)
 
 
+
         safe_log = 1e-12
-        self.g_loss = -tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_fake) + safe_log ) )
-        self.d_loss = -tf.reduce_mean( tf.log( 1 - tf.nn.sigmoid(self.d_fake) + safe_log)) - tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_real) + safe_log))
+
+        ### g , 最大化 D (self.d_fake) 最大化 分类准确数，log需要负号
+        self.g_loss = - tf.reduce_mean( self.d_fake) - tf.reduce_mean( tf.reduce_sum(self.y * tf.log( tf.nn.softmax(self.c_fake) + safe_log) , axis = 1 ) )
+        ### d , 最小化 D (self.d_fake) 最大化 D (self.d_real)
+        self.d_loss = tf.reduce_mean(self.d_fake) - tf.reduce_mean(self.d_real)
+
+        # self.g_loss = -tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_fake) + safe_log ) ) - tf.reduce_mean( tf.reduce_sum(self.y * tf.log( tf.nn.softmax(self.c_fake) + safe_log) , axis = 1 ) )
+        # self.d_loss =  tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_fake) + safe_log)) - tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_real) + safe_log))
+
         self.clip_D = [var.assign(tf.clip_by_value(var, -0.01,0.01)) for var in self.D.vars]
-        self.c_loss = -tf.reduce_mean( tf.reduce_sum(self.y * tf.log( tf.nn.softmax(self.c_fake) + safe_log) , axis = 1 ) )
+        self.c_loss = - tf.reduce_mean( tf.reduce_sum(self.y * tf.log( tf.nn.softmax(self.c_real) + safe_log) , axis = 1 ) )
 
         self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
         self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
@@ -203,7 +216,7 @@ class CGAN(op_base):
     def z_sample(self):
         return np.random.uniform(-1.,1.,size = [self.batch_size,self.input_noise_size])
 
-    def bulid_type_dict(self):
+    def bulid_optimizer_type_dict(self):
         self.CGAN_OPT_TYPE_DICT = dict()
         self.CGAN_OPT_TYPE_DICT['classifier_w_cgan'] = self.classifier_w_cgan
         self.CGAN_OPT_TYPE_DICT['dc_ls_cgan'] = self.dc_ls_cgan
@@ -215,43 +228,62 @@ class CGAN(op_base):
 
 
 
-    def train(self):
-        saver = tf.train.Saver()
+    def train(self,test = False):
+
         self.bulid_optimizer_type_dict()
-        self.build_run_type_dict()
-        optimizer = self.get_optimizer[self.CGAN_TYPE]
+        optimizer = self.get_optimizer(self.CGAN_TYPE)
+        saver = tf.train.Saver()
         self.model_save_path = os.path.join(self.model_save_path,self.CGAN_TYPE)
 
-        if(not os.path.exits(self.model_save_path)):
+        if(not os.path.exists(self.model_save_path)):
             os.mkdir(self.model_save_path)
 
         if(self.pretrain):
             saver.restore(self.sess,tf.train.latest_checkpoint(self.model_save_path))
-        else:
-            self.sess.run(tf.global_variables_initializer())
-            print('start train')
-            for num in range(1000000):
-                X_b, y_b = self.data(self.batch_size)
+        if(test):
+            return
+        self.sess.run(tf.global_variables_initializer())
+        print('start train')
+        for num in range(1000000):
+            X_b, y_b = self.data(self.batch_size)
 
-                if(self.CGAN_TYPE == 'classifier_w_cgan'):
-                    _opt,_clip_D = self.sess.run([optimizer,self.clip_D],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
-                elif(self.CGAN_TYEP == 'dc_ls_cgan'):
-                    _ = self.sess.run(optimizer,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
-                elif(self.CGAN_TYEP == 'dc_cgan'):
-                    _ = self.sess.run(optimizer,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
+            if(self.CGAN_TYPE == 'classifier_w_cgan'):
+                _opt,_clip_D,g_loss,d_loss,c_loss = self.sess.run([optimizer,self.clip_D,self.g_loss,self.d_loss,self.c_loss],feed_dict = {self.x:X_b,self.y:y_b,self.z:self.z_sample()})
 
-                if(num % 1000 == 0):
+                if (num % 200 == 0):
 
-                    g_loss,d_loss,fake = self.sess.run(
-                        [self.g_loss,self.d_loss,self.fake],
-                        feed_dict={self.x:X_b,self.y: y_b, self.z: self.z_sample()})
+                    saver.save(self.sess, os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
+                    print('Iter: {}; D loss: {:.4}; G_loss: {:.4}; C_loss: {:.4}'.format(num, d_loss, g_loss,c_loss))
 
-                    saver.save(self.sess,os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
+            elif(self.CGAN_TYPE == 'dc_ls_cgan'):
+                _ = self.sess.run(optimizer,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
+
+                if (num % 200 == 0):
+                    g_loss, d_loss, fake = self.sess.run(
+                        [self.g_loss, self.d_loss, self.fake],
+                        feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
+
+                    saver.save(self.sess, os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
+                    print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
+
+            elif(self.CGAN_TYPE == 'dc_cgan'):
+                _ = self.sess.run(optimizer,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
+
+                if (num % 200 == 0):
+                    g_loss, d_loss, fake = self.sess.run(
+                        [self.g_loss, self.d_loss, self.fake],
+                        feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
+
+                    saver.save(self.sess, os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
 
 
+
+
+
+
     def test(self):
-        self.train()
+        self.train(test = True)
         X_b, y_b = self.data(self.batch_size)
         fake = self.sess.run(
                 self.fake,
