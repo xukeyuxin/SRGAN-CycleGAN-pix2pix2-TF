@@ -56,7 +56,7 @@ elif(model == 'CGAN'):
 
 tf.flags.DEFINE_integer('lambda1', 10, 'lambda1, default: 10')
 
-tf.flags.DEFINE_float('lr', 1e-4,
+tf.flags.DEFINE_float('lr', 2e-3,
                       'initial learning rate for Adam, default: 0.0001')
 tf.flags.DEFINE_float('beta', 1,
                       'momentum term of Adam, default: 1')
