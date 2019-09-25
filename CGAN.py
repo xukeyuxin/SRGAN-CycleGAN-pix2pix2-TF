@@ -108,7 +108,7 @@ class CGAN(op_base):
         op_base.__init__(self,args)
         self.sess = sess
         self.Reader = reader(args)
-        self.CGAN_TYPE = 'dc_ls_cgan'
+        self.CGAN_TYPE = 'dc_cgan'
 
         # data
         self.data = mnist()
