@@ -179,7 +179,7 @@ class CGAN(op_base):
         self.D = discriminator('D')
         self.C = classifier('C')
 
-        self.fake = self.G(self.x)
+        self.fake = self.G(tf.concat([self.z,self.y],axis = 1))
 
         self.d_real = self.D(self.x)
         self.d_fake = self.D(self.fake)
