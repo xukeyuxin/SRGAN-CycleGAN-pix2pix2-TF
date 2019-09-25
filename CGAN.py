@@ -108,7 +108,7 @@ class CGAN(op_base):
         op_base.__init__(self,args)
         self.sess = sess
         self.Reader = reader(args)
-        self.CGAN_TYPE = 'classifier_w_cgan'
+        self.CGAN_TYPE = 'dc_ls_cgan'
 
         # data
         self.data = mnist()
@@ -264,7 +264,7 @@ class CGAN(op_base):
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
 
             elif(self.CGAN_TYPE == 'dc_cgan'):
-                _ = self.sess.run(optimizer,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
+                _,g_loss,d_loss = self.sess.run(optimizer,self.g_loss,self.d_loss,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
 
                 if (num % 200 == 0):
                     g_loss, d_loss, fake = self.sess.run(
