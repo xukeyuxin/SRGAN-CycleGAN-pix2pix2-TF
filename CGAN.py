@@ -253,22 +253,22 @@ class CGAN(op_base):
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}; C_loss: {:.4}'.format(num, d_loss, g_loss,c_loss))
 
             elif(self.CGAN_TYPE == 'dc_ls_cgan'):
-                _,g_loss,d_loss = self.sess.run(optimizer,self.g_loss,self.d_loss,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
+                _,g_loss,d_loss = self.sess.run([optimizer,self.g_loss,self.d_loss],feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
 
                 if (num % 200 == 0):
-                    g_loss, d_loss, fake = self.sess.run(
-                        [self.g_loss, self.d_loss, self.fake],
+                    fake = self.sess.run(
+                        self.fake,
                         feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
 
                     saver.save(self.sess, os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
                     print('Iter: {}; D loss: {:.4}; G_loss: {:.4}'.format(num, d_loss, g_loss))
 
             elif(self.CGAN_TYPE == 'dc_cgan'):
-                _,g_loss,d_loss = self.sess.run(optimizer,self.g_loss,self.d_loss,feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
+                _,g_loss,d_loss = self.sess.run([optimizer,self.g_loss,self.d_loss],feed_dict={self.x:X_b,self.y:y_b,self.z:self.z_sample()} )
 
                 if (num % 200 == 0):
-                    g_loss, d_loss, fake = self.sess.run(
-                        [self.g_loss, self.d_loss, self.fake],
+                    fake = self.sess.run(
+                        self.fake,
                         feed_dict={self.x: X_b, self.y: y_b, self.z: self.z_sample()})
 
                     saver.save(self.sess, os.path.join(self.model_save_path, 'checkpoint' + '-' + str(num)))
