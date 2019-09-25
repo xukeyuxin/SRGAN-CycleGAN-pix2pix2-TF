@@ -132,11 +132,11 @@ class CGAN(op_base):
 
         safe_log = 1e-12
         ### use cross entropy (safe log)
-        self.g_loss = - tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_fake) + safe_log) )
-        # self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.ones_like(self.d_fake)) )
+        # self.g_loss = - tf.reduce_mean( tf.log( tf.nn.sigmoid(self.d_fake) + safe_log) )
+        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.ones_like(self.d_fake)) )
 
-        self.d_loss = tf.reduce_mean(tf.log( tf.nn.sigmoid(self.d_fake) + safe_log )) - tf.reduce_mean( tf.log(tf.nn.sigmoid(self.d_real) + safe_log ))
-        # self.d_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.zeros_like(self.d_fake)) ) + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_real,labels = tf.ones_like(self.d_real)) )
+        # self.d_loss = - tf.reduce_mean(tf.log( 1- tf.nn.sigmoid(self.d_fake) + safe_log )) - tf.reduce_mean( tf.log(tf.nn.sigmoid(self.d_real) + safe_log ))
+        self.d_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_fake,labels = tf.zeros_like(self.d_fake)) ) + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.d_real,labels = tf.ones_like(self.d_real)) )
 
         self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
         self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
