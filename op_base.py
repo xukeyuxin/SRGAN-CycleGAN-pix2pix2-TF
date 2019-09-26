@@ -13,11 +13,15 @@ class op_base(object):
 
         self.input_image_weight = args.input_image_weight
         self.input_image_height = args.input_image_height
+        self.output_image_height = args.output_image_height
+        self.output_image_weight = args.output_image_weight
         self.input_image_channels = args.input_image_channels
 
         if(args.model == 'CGAN'):
             self.label_embedding_size = args.label_embedding_size
             self.input_noise_size = args.input_noise_size
+
+
 
         self.alpha = 1
         self.beta = 1

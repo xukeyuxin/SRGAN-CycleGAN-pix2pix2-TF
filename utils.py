@@ -59,6 +59,34 @@ def write_image_gray(image_content,path,write_shape):
         one = one.reshape(write_shape)
         cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
 
+def make_optimizer(loss, variables, name='Adam'):
+    """ Adam optimizer with learning rate 0.0002 for the first 100k steps (~100 epochs)
+      and a linearly decaying rate that goes to zero over the next 100k steps
+    """
+    global_step = tf.Variable(0, trainable=False)
+    starter_learning_rate = 1e-4
+    end_learning_rate = 0.0
+    start_decay_step = 100000
+    decay_steps = 100000
+    beta1 = self.beta1
+    learning_rate = (
+      tf.where(
+              tf.greater_equal(global_step, start_decay_step),
+              tf.train.polynomial_decay(starter_learning_rate, global_step-start_decay_step,
+                                        decay_steps, end_learning_rate,
+                                        power=1.0),
+              starter_learning_rate
+      )
+
+    )
+    tf.summary.scalar('learning_rate/{}'.format(name), learning_rate)
+
+    learning_step = (
+      tf.train.AdamOptimizer(learning_rate, beta1=beta1, name=name)
+              .minimize(loss, global_step=global_step, var_list=variables)
+    )
+    return learning_step
+
 class reader(op_base):
 
     def __init__(self,args):
@@ -69,13 +97,10 @@ class reader(op_base):
         start_count = batch_time * self.batch_size
         end_count = (batch_time + 1) * self.batch_size
         choice_batch = data_list[start_count:end_count]
-        one_batch_shape = (1, self.input_image_height, self.input_image_weight, self.input_image_channels)
         init_array = []
 
         for one in choice_batch:
             image_content = cv2.imread(os.path.join(data_path,one))
-            image_content = rgb2float(image_content)
-            image_content = np.reshape(image_content,one_batch_shape)
             init_array.append(image_content)
 
             # with open(os.path.join(data_path,one),'rb') as f:
@@ -88,7 +113,7 @@ class reader(op_base):
             #     image_content = tf.reshape(image_content,one_batch_shape)
             #     init_array.append(image_content)
 
-        init_array = np.concatenate(init_array,axis = 0)
+        init_array = rgb2float(np.asarray(init_array))
 
         return init_array
 

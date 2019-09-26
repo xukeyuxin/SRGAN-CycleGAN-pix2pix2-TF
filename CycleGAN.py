@@ -6,7 +6,9 @@ from op_base import op_base
 import logging
 from functools import reduce
 from tqdm import tqdm
+import random
 import os
+import cv2
 
 
 class generator(op_base):
@@ -104,7 +106,6 @@ class discriminator(op_base):
 
 
 
-
 class CycleGAN(op_base):
     def __init__(self, sess, args, reader):
         op_base.__init__(self, args)
@@ -190,11 +191,34 @@ class CycleGAN(op_base):
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
                 print(g_loss, f_loss, Y_D_loss, X_D_loss)
 
-    def test(self, input_image):
+    def test(self):
+
+        test_image_dir = os.path.join('data',self.model,self.data_name,'test' + self.test_type)
+        test_image_list =  os.listdir(test_image_dir)
+        random.shuffle(test_image_list)
+        test_image_content = np.array([])
+
+        for one in test_image_list:
+            print(one)
+            one = os.path.join(test_image_dir, one)
+            if(len(test_image_content) == self.batch_size):
+                break
+            content = cv2.imread(one)
+            if(content.shape[0] != self.input_image_height or content.shape[1] != self.input_image_weight):
+                content = cv2.resize(content,(self.input_image_height,self.input_image_weight),interpolation = cv2.INTER_LINEAR)
+
+            content = content.reshape([1,self.input_image_height,self.input_image_weight,self.input_image_channels])
+
+            if(len(test_image_content) == 0 ):
+                test_image_content = content
+            else:
+                test_image_content = np.concatenate([test_image_content,content])
+
         self.train(need_train = False)
+
         write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
         if (self.test_type == 'A'):
-            generate = self.sess.run(self.fake_y, feed_dict={self.x: input_image})
+            generate = self.sess.run(self.fake_y, feed_dict={self.x: test_image_content})
         elif(self.test_type == 'B'):
-            generate = self.sess.run(self.fake_x,feed_dict = {self.y:input_image})
+            generate = self.sess.run(self.fake_x,feed_dict = {self.y:test_image_content})
         write_image(generate,self.generate_image_path,write_shape)

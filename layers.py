@@ -1,6 +1,7 @@
 # coding=utf-8
 import tensorflow as tf
 import numpy as np
+import os
 from functools import reduce
 
 
@@ -13,7 +14,7 @@ def get_variable(name, shape, initializer, scope):
     return v
 
 
-def conv2d(input, output_shape, strides=1, kernel_size=3, padding='SAME', name=None, bias=False):
+def conv2d(input, output_shape, strides=1, kernel_size=3, padding='SAME', name=None, bias=False ):
     input_shape = input.get_shape().as_list()[-1]
     filter_shape = [kernel_size, kernel_size, input_shape, output_shape]
     strides_shape = [1, strides, strides, 1]
@@ -77,6 +78,10 @@ def fc(input, output_shape, name=None, bias=False,initializer = tf.random_normal
 
     return fc
 
+def Upsampling(input,out_size):
+    assert len(input.get_shape.as_list()) == 4
+    return tf.image.resize_images(input,[out_size,out_size])
+
 
 def max_pool(input, ksize, strides_size=1, padding='SAME', name=None):
     with tf.variable_scope(name):
@@ -119,7 +124,7 @@ def xavier_init(random_size, name, init_type='normal', trainable=True):
 
 
 
-def bn_layer(x, is_training=True, name=None, moving_decay=0.9, eps=1e-5):
+def bn_layer(x, is_training=True, name=None, moving_decay=0.9, eps=1e-5,gamma_initializer = tf.constant_initializer(1)):
     # 获取输入维度并判断是否匹配卷积层(4)或者全连接层(2)
     shape = x.shape
     assert len(shape) in [2, 4]
@@ -144,8 +149,164 @@ def bn_layer(x, is_training=True, name=None, moving_decay=0.9, eps=1e-5):
         mean, var = tf.cond(tf.equal(is_training, True), mean_var_with_update,
                             lambda: (ema.average(batch_mean), ema.average(batch_var)))
 
-        gamma = tf.get_variable('gamma', shape = param_shape, initializer = tf.constant_initializer(1))
+        gamma = tf.get_variable('gamma', shape = param_shape, initializer = gamma_initializer)
         beta = tf.get_variable('beta', shape = param_shape, initializer = tf.constant_initializer(0))
 
         # 最后执行batch normalization
         return tf.nn.batch_normalization(x, mean, var, beta, gamma, eps)
+
+class vgg19(object):
+    def __init__(self,name):
+        self.reuse = False
+        self.name = name
+        self.VGG_MEAN = [103.939, 116.779, 123.68]
+        self.layers = ['conv1_1','conv1_2','conv2_1','conv2_2','conv3_1','conv3_2','conv3_3','conv3_4',
+                       'conv4_1','conv4_2','conv4_3','conv4_4','conv5_1','conv5_2','conv5_3','conv5_4',
+                       'fc6','fc7','fc8']
+        vgg_path = os.path.join('model','VGG19','vgg19-full.npy')
+        self.npz = np.load(vgg_path,encoding = 'latin1').item()
+        # for i in sorted(self.npz.items()):
+        #     print('layer: %s  weight %s bias %s' % (i[0],i[1][0].shape,i[1][1].shape))
+
+    def _conv2d(self,input,filter,name):
+        with tf.variable_scope(name):
+            filter = self.npz[name][0]
+            bias = self.npz[name][1]
+            conv = tf.nn.conv2d(input,filter,[1,1,1,1],padding = 'SAME')
+            conv = tf.nn.bias_add(conv,bias)
+            conv = tf.nn.relu(conv)
+        return conv
+
+    def _fc(self,input,name):
+        with tf.variable_scope(name):
+            weight = self.npz[name][0]
+            bias = self.npz[name][1]
+            fc = tf.nn.bias_add(tf.matmul(input,filter),bias)
+        return fc
+
+    def _maxpool(self,input,name):
+        return tf.nn.max_pool(input,ksize = [1,2,2,1],strides = [1,2,2,1],padding = 'SAME',name = name)
+
+    def prepare(self,input):
+        ### [-1,1] -> [0,255]
+        input = tf.image.resize_images(input,(224,224))
+        input = 255. * (input + 1)
+        red,green,blue = tf.split(input,3,axis = 3)
+        red = red - self.VGG_MEAN[0]
+        green = green - self.VGG_MEAN[1]
+        blue = blue - self.VGG_MEAN[2]
+        input = tf.concat([red,green,blue],axis = 3)
+        return input
+
+
+    def __call__(self,input,need_fc = False):
+        input = self.prepare(input)
+        with tf.variable_scope(self.name,reuse = self.reuse):
+            self.conv1_1 = self._conv2d(input,64,name = 'conv1_1')
+            self.conv1_2 = self._conv2d(self.conv1_1,64,name = 'conv1_2')
+            self.maxpool1 = self._maxpool(self.conv1_2,name = 'maxpool1')
+
+            self.conv2_1 = self._conv2d(self.maxpool1,128,name = 'conv2_1')
+            self.conv2_2 = self._conv2d(self.conv2_1,128,name = 'conv2_2')
+            self.maxpool2 = self._maxpool(self.conv2_2, name='maxpool2')
+
+            self.conv3_1 = self._conv2d(self.maxpool2,256,name = 'conv3_1')
+            self.conv3_2 = self._conv2d(self.conv3_1,256,name = 'conv3_2')
+            self.conv3_3 = self._conv2d(self.conv3_2,256,name = 'conv3_3')
+            self.conv3_4 = self._conv2d(self.conv3_3,256,name = 'conv3_4')
+            self.maxpool3 = self._maxpool(self.conv3_4, name='maxpool3')
+
+            self.conv4_1 = self._conv2d(self.maxpool3,512,name = 'conv4_1')
+            self.conv4_2 = self._conv2d(self.conv4_1,512,name = 'conv4_2')
+            self.conv4_3 = self._conv2d(self.conv4_2,512,name = 'conv4_3')
+            self.conv4_4 = self._conv2d(self.conv4_3,512,name = 'conv4_4')
+            self.maxpool4 = self._maxpool(self.conv4_4, name='maxpool4')
+
+            self.conv5_1 = self._conv2d(self.maxpool4,512,name = 'conv5_1')
+            self.conv5_2 = self._conv2d(self.conv5_1,512,name = 'conv5_2')
+            self.conv5_3 = self._conv2d(self.conv5_2,512,name = 'conv5_3')
+            self.conv5_4 = self._conv2d(self.conv5_3,512,name = 'conv5_4')
+            self.maxpool5 = self._maxpool(self.conv5_4, name='maxpool5')
+
+            if(not need_fc):
+                return self.maxpool5
+
+            self.maxpool5 = tf.reshape(self.maxpool5,[-1,7*7*512])
+            self.fc6 = self._fc(self.maxpool5,'fc6') ## 25088 -> 4096
+            self.fc6 = tf.nn.relu(self.fc6)
+            self.fc7 = self._fc(self.fc6,'fc7') ## 4096 -> 4096
+            self.fc7 = tf.nn.relu(self.fc7)
+            self.fc8 = self._fc(self.fc7,'fc8') ## 4096 -> 1000
+            self.fc8 = tf.nn.softmax(self.fc8)
+
+            return self.fc8
+
+class vgg16(object):
+    def __init__(self,name):
+        self.reuse = False
+        self.name = name
+        self.VGG_MEAN = [103.939, 116.779, 123.68]
+        self.layers = ['conv1_1','conv1_2','conv2_1','conv2_2','conv3_1','conv3_2','conv3_3',
+                       'conv4_1','conv4_2','conv4_3','conv5_1','conv5_2','conv5_3','fc6','fc7','fc8']
+        vgg_path = os.path.join('model','VGG16','vgg16.npy')
+        self.npz = np.load(vgg_path,encoding = 'latin1').item()
+        for i in sorted(self.npz.items()):
+            print('layer: %s  weight %s bias %s' % (i[0],i[1][0].shape,i[1][1].shape))
+
+    def _conv2d(self,input,name):
+        with tf.variable_scope(name):
+            filter = self.npz[name][0]
+            bias = self.npz[name][1]
+            conv = tf.nn.conv2d(input,filter,[1,1,1,1],padding = 'SAME')
+            conv = tf.nn.bias_add(conv,bias)
+            conv = tf.nn.relu(conv)
+        return conv
+
+    def _fc(self,input,name):
+        with tf.variable_scope(name):
+            weight = self.npz[name][0]
+            bias = self.npz[name][1]
+            fc = tf.nn.bias_add(tf.matmul(input,filter),bias)
+        return fc
+
+    def _maxpool(self,input,name):
+        return tf.nn.maxpool2d(input,ksize = [1,2,2,1],strides = [1,2,2,1],padding = 'SAME',name = name)
+
+    def __call__(self,input,need_fc = False):
+        with tf.variable_scope(self.name,reuse = self.reuse):
+            self.conv1_1 = self._conv2d(input,64,name = 'conv1_1')
+            self.conv1_2 = self._conv2d(self.conv1_1,64,name = 'conv1_2')
+            self.maxpool1 = self._maxpool(self.conv1_2,name = 'maxpool1')
+
+            self.conv2_1 = self._conv2d(maxpool1,128,name = 'conv2_1')
+            self.conv2_2 = self._conv2d(conv2_1,128,name = 'conv2_2')
+            self.maxpool2 = self._maxpool(self.conv2_2, name='maxpool2')
+
+            self.conv3_1 = self._conv2d(maxpool2,256,name = 'conv3_1')
+            self.conv3_2 = self._conv2d(conv3_1,256,name = 'conv3_2')
+            self.conv3_3 = self._conv2d(conv3_2,256,name = 'conv3_3')
+            self.maxpool3 = self._maxpool(self.conv3_4, name='maxpool3')
+
+            self.conv4_1 = self._conv2d(maxpool3,256,name = 'conv4_1')
+            self.conv4_2 = self._conv2d(conv4_1,256,name = 'conv4_2')
+            self.conv4_3 = self._conv2d(conv4_2,256,name = 'conv4_3')
+            self.maxpool4 = self._maxpool(self.conv4_4, name='maxpool4')
+
+            self.conv5_1 = self._conv2d(maxpool2,256,name = 'conv5_1')
+            self.conv5_2 = self._conv2d(conv5_1,256,name = 'conv5_2')
+            self.conv5_3 = self._conv2d(conv5_2,256,name = 'conv5_3')
+            self.maxpool5 = self._maxpool(self.conv5_4, name='maxpool5')
+
+            self.fc6 = self._fc(self.maxpool5,'fc6') ## 25088 -> 4096
+            self.fc6 = tf.nn.relu(self.fc6)
+            self.fc7 = self._fc(self.fc6,'fc7') ## 4096 -> 4096
+            self.fc7 = tf.nn.relu(self.fc7)
+            self.fc8 = self._fc(self.fc7,'fc8') ## 4096 -> 1000
+            self.fc8 = tf.nn.softmax(self.fc8)
+
+            return_layer = self.maxpool5 if not need_fc else self.fc8
+
+            return return_layer
+
+
+
