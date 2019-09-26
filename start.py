@@ -24,7 +24,7 @@ else:
 FLAGS = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('model',model,'model type, default: CycleGAN')
-tf.flags.DEFINE_integer('batch_size', 16, 'batch size, default: 16')
+
 tf.flags.DEFINE_integer('input_size', 64, 'input_size, default: 64')
 
 if(type == 'train'):
@@ -40,6 +40,7 @@ tf.flags.DEFINE_integer('max_to_keep', 5, 'real_label, default: 5')
 
 
 if(model == 'CycleGAN'):
+    tf.flags.DEFINE_integer('batch_size', 16, 'batch size, default: 16')
     tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
     tf.flags.DEFINE_string('data_name', 'horse_zebra_256', 'test_type, default: apple_orange')
     tf.flags.DEFINE_integer('input_image_weight', 256, 'image size, default: 128')
@@ -49,6 +50,7 @@ if(model == 'CycleGAN'):
     tf.flags.DEFINE_integer('input_image_channels', 3, 'image size, default: 3')
 
 elif(model == 'CGAN'):
+    tf.flags.DEFINE_integer('batch_size', 16, 'batch size, default: 16')
     tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
     tf.flags.DEFINE_integer('label_embedding_size', 10, 'label_embedding_size, default: 10')
     tf.flags.DEFINE_integer('input_noise_size', 100, 'input_noise_size, default: 100')
