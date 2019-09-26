@@ -83,7 +83,7 @@ model_dict = {'CycleGAN':CycleGAN,
 
 
 if __name__=='__main__':
-    with tf.Session() as sess:
+    with tf.Session(config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)) as sess:
         Net = model_dict[model](sess, FLAGS, reader)
         if(type == 'train'):
             Net.train()
