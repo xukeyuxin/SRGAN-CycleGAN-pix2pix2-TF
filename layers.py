@@ -164,7 +164,7 @@ class vgg19(object):
                        'conv4_1','conv4_2','conv4_3','conv4_4','conv5_1','conv5_2','conv5_3','conv5_4',
                        'fc6','fc7','fc8']
         vgg_path = os.path.join('model','VGG19','vgg19-full.npy')
-        self.npz = np.load(vgg_path,encoding = 'latin1').item()
+        self.npz = np.load(vgg_path,encoding = 'latin1', allow_pickle = False).item()
         # for i in sorted(self.npz.items()):
         #     print('layer: %s  weight %s bias %s' % (i[0],i[1][0].shape,i[1][1].shape))
 
@@ -249,9 +249,9 @@ class vgg16(object):
         self.layers = ['conv1_1','conv1_2','conv2_1','conv2_2','conv3_1','conv3_2','conv3_3',
                        'conv4_1','conv4_2','conv4_3','conv5_1','conv5_2','conv5_3','fc6','fc7','fc8']
         vgg_path = os.path.join('model','VGG16','vgg16.npy')
-        self.npz = np.load(vgg_path,encoding = 'latin1').item()
-        for i in sorted(self.npz.items()):
-            print('layer: %s  weight %s bias %s' % (i[0],i[1][0].shape,i[1][1].shape))
+        self.npz = np.load(vgg_path,encoding = 'latin1', allow_pickle = False).item()
+        # for i in sorted(self.npz.items()):
+        #     print('layer: %s  weight %s bias %s' % (i[0],i[1][0].shape,i[1][1].shape))
 
     def _conv2d(self,input,name):
         with tf.variable_scope(name):

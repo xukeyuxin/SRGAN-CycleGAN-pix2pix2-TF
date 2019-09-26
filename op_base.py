@@ -22,7 +22,6 @@ class op_base(object):
             self.input_noise_size = args.input_noise_size
 
 
-
         self.alpha = 1
         self.beta = 1
         self.lr = args.lr
