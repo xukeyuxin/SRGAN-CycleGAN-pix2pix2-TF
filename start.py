@@ -62,7 +62,7 @@ elif(model == 'CGAN'):
     tf.flags.DEFINE_integer('input_image_channels', 1, 'image size, default: 3')
 
 elif(model == 'SRGAN'):
-    tf.flags.DEFINE_integer('batch_size', 7, 'batch size, default: 16')
+    tf.flags.DEFINE_integer('batch_size', 5, 'batch size, default: 16')
     tf.flags.DEFINE_string('data_name', 'MixImage', 'test_type, default: FuzzyImage')
     tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
     tf.flags.DEFINE_integer('input_image_weight', 96, 'image size, default: 96')
@@ -86,10 +86,14 @@ model_dict = {'CycleGAN':CycleGAN,
 
 
 if __name__=='__main__':
-    with tf.Session() as sess:
+    config = tf.ConfigProto()
+    # config.gpu_options.allow_growth = True
+    with tf.Session( config = config ) as sess:
         Net = model_dict[model](sess, FLAGS, reader)
         if(type == 'train'):
             Net.train()
+        if(type == 'pretrain'):
+            Net.train(pretrain = True)
         elif(type == 'test'):
             Net.test()
 

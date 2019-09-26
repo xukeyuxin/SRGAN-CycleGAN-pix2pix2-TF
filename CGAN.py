@@ -221,7 +221,7 @@ class CGAN(op_base):
     def get_optimizer(self,name):
         return self.CGAN_OPT_TYPE_DICT[name]()
 
-    def train(self,test = False):
+    def train(self,need_train = True,pretrain = False):
 
         self.bulid_optimizer_type_dict()
         optimizer = self.get_optimizer(self.CGAN_TYPE)
@@ -231,9 +231,9 @@ class CGAN(op_base):
         if(not os.path.exists(self.model_save_path)):
             os.mkdir(self.model_save_path)
 
-        if(self.pretrain):
+        if(pretrain):
             saver.restore(self.sess,tf.train.latest_checkpoint(self.model_save_path))
-        if(test):
+        if(not need_train):
             return
         self.sess.run(tf.global_variables_initializer())
         print('start train')
@@ -273,7 +273,7 @@ class CGAN(op_base):
 
 
     def test(self):
-        self.train(test = True)
+        self.train(need_train = False, pretrain = True)
         X_b, y_b = self.data(self.batch_size)
         fake = self.sess.run(
                 self.fake,

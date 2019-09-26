@@ -132,6 +132,8 @@ class SRGAN(op_base):
         self.d_fake = self.D(self.fake)
         self.d_real = self.D(self.y)
 
+
+
         safe_log = 1e-12
         self.d_loss = tf.reduce_mean(- tf.log(self.d_real + safe_log) - tf.log(1 - self.d_fake + safe_log))
 
@@ -156,11 +158,11 @@ class SRGAN(op_base):
         with tf.control_dependencies([self.opt_d,self.opt_g]):
             return tf.no_op(name = 'optimizer')
 
-    def train(self,need_train = True):
+    def train(self,need_train = True,pretrain = False):
 
         optimizer = self.build_model()
         saver = tf.train.Saver()
-        if (self.pretrain):
+        if (pretrain):
             saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
             print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
         if(need_train):
@@ -176,10 +178,12 @@ class SRGAN(op_base):
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
-                    _, g_loss, d_loss = self.sess.run(
-                        [optimizer, self.g_loss, self.d_loss],
+                    _, g_loss, d_loss,d_fake,d_real = self.sess.run(
+                        [optimizer, self.g_loss, self.d_loss,self.d_fake,self.d_real],
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
+
+                    print(d_fake,d_real)
 
                 saver.save(self.sess,
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
