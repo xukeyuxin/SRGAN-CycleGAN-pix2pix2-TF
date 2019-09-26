@@ -183,7 +183,7 @@ class SRGAN(op_base):
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
 
-
+                    print(d_fake,d_real)
                 saver.save(self.sess,
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
                 print(g_loss, d_loss)
