@@ -86,7 +86,7 @@ model_dict = {'CycleGAN':CycleGAN,
 
 
 if __name__=='__main__':
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+    config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     config.gpu_options.per_process_gpu_memory_fraction = 0.9
     with tf.Session( config = config ) as sess:
