@@ -106,7 +106,6 @@ class reader(op_base):
         init_array = []
 
         for one in choice_batch:
-            print(one)
             image_content = cv2.imread(os.path.join(data_path,one))
             init_array.append(image_content)
 
