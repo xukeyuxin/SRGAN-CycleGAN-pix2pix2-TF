@@ -169,7 +169,7 @@ class SRGAN(op_base):
 
     def train(self,need_train = True,pretrain = False):
 
-        optimizer = self.build_model()
+        self.build_model()
         saver = tf.train.Saver(max_to_keep = 1)
         self.sess.run(tf.global_variables_initializer())
         if (pretrain):
@@ -207,18 +207,20 @@ class SRGAN(op_base):
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
+                    
+                    _, d_loss, d_fake, d_real = self.sess.run([self.opt_d, self.d_loss,self.d_fake,self.d_real], feed_dict={self.x: one_batch_x,self.y: one_batch_y})
 
-                    _, g_loss,g_d_loss,g_mse,g_vgg, d_loss,d_fake,d_real = self.sess.run(
-                        [optimizer, self.g_loss,self.g_d_loss,self.g_mean_square,self.vgg_mean_square, self.d_loss,self.d_fake,self.d_real],
+                    _, g_loss,g_d_loss,g_mse,g_vgg = self.sess.run(
+                        [self.opt_g, self.g_loss,self.g_d_loss,self.g_mean_square,self.vgg_mean_square],
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
                     print(d_fake)
                     print(d_real)
+                    print('find d-loss: %s' % d_loss)
                     print('find g-loss: %s - %s - %s' % (g_d_loss,g_mse,g_vgg))
 
                 saver.save(self.sess,
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
-                print(g_loss, d_loss)
 
     def test(self):
         pass
