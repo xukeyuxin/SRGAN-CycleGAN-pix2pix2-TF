@@ -171,12 +171,12 @@ class SRGAN(op_base):
 
         optimizer = self.build_model()
         saver = tf.train.Saver()
+        self.sess.run(tf.global_variables_initializer())
         if (pretrain):
             saver.restore(self.sess, tf.train.latest_checkpoint(self.model_init_g_save_path))
             print('success restore %s' % tf.train.latest_checkpoint(self.model_init_g_save_path))
         if(need_train):
             print('start train')
-            self.sess.run(tf.global_variables_initializer())
             x_data_path = os.path.join('data',self.model, self.data_name, 'FuzzyImage')
             y_data_path = os.path.join('data',self.model, self.data_name, 'ClearImage')
             x_data_list = os.listdir(x_data_path)
