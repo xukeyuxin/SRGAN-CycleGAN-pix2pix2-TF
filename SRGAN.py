@@ -5,7 +5,8 @@ from op_base import op_base
 import os
 from functools import reduce
 from tqdm import tqdm
-
+import random
+from utils import *
 
 class generator(object):
     def __init__(self, name):
@@ -122,6 +123,10 @@ class SRGAN(op_base):
         self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.output_image_weight, self.output_image_height,
                                                    self.input_image_channels])
 
+        self.input_image = tf.placeholder(tf.float32,
+                                    shape=[1, self.input_image_weight, self.input_image_height,
+                                           self.input_image_channels])
+
         self.G = generator('G')
         self.D = discriminator('D')
         self.VGG19 = ly.vgg19('VGG19')
@@ -161,6 +166,8 @@ class SRGAN(op_base):
         # with tf.control_dependencies([self.opt_d,self.opt_g]):
         #     return tf.no_op(name = 'optimizer')
 
+
+
     def save_params(self,values):
         print('start find')
         for one in values:
@@ -173,8 +180,8 @@ class SRGAN(op_base):
         saver = tf.train.Saver(max_to_keep = 1)
         self.sess.run(tf.global_variables_initializer())
         if (pretrain):
-            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_init_g_save_path))
-            print('success restore %s' % tf.train.latest_checkpoint(self.model_init_g_save_path))
+            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
+            print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
         if(need_train):
             print('start train')
             x_data_path = os.path.join('data',self.model, self.data_name, 'FuzzyImage')
@@ -202,26 +209,47 @@ class SRGAN(op_base):
             #                         'checkpoint_init_g' + '-' + str(i) + '-' + str(batch_time)))
             ##### mse loss 3262
 
-            for i in range(self.init_g_epoch):
+            for i in range(self.epoch):
                 epoch_size = min(len(x_data_list), len(y_data_list))
+                total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0,0,0
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
-                    
+
                     _, d_loss, d_fake, d_real = self.sess.run([self.opt_d, self.d_loss,self.d_fake,self.d_real], feed_dict={self.x: one_batch_x,self.y: one_batch_y})
 
                     _, g_loss,g_d_loss,g_mse,g_vgg = self.sess.run(
                         [self.opt_g, self.g_loss,self.g_d_loss,self.g_mean_square,self.vgg_mean_square],
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
-                    print(d_fake)
-                    print(d_real)
-                    print('find d-loss: %s' % d_loss)
-                    print('find g-loss: %s - %s - %s' % (g_d_loss,g_mse,g_vgg))
+
+                    total_d_loss += d_loss
+                    total_g_d_loss += g_d_loss
+                    total_mse_loss += g_mse
+                    total_vgg_loss += g_vgg
+                    iter += 1
+
+                    print('find d-loss: %s' % (total_d_loss // iter))
+                    print('find g_d-loss: %s' % (total_g_d_loss // iter))
+                    print('find g_mse-loss: %s' % (total_mse_loss // iter))
+                    print('find g_vgg-loss: %s' % (total_vgg_loss // iter))
 
                 saver.save(self.sess,
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
 
     def test(self):
-        pass
+
+        # x_data_path = os.path.join('data', self.model, self.data_name, 'FuzzyImage')
+        # x_data_list = os.listdir(x_data_path)
+        # choose_batch_iter = random.choice( range(len(x_data_list) // self.batch_size ) )
+        # one_batch_x = self.Reader.build_batch(self,choose_batch_iter, x_data_list, x_data_path)
+
+        test_image = test_one_image('fuzzy_cup.png')
+        self.batch_size = len(test_image)
+        self.train(pretrain=True, need_train=False)
+        fake = self.sess.run(self.fake,feed_dict = {self.x:test_image})
+
+        write_shape = [self.output_image_height,self.output_image_weight,self.input_image_channels]
+        write_image(fake,self.generate_image_path,write_shape)
+
 

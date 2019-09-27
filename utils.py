@@ -87,6 +87,12 @@ def make_optimizer(loss, variables, name='Adam'):
     )
     return learning_step
 
+def test_one_image(image_name):
+    testImage = os.path.join('data','test_image',image_name)
+    content = cv2.imread(testImage)
+    content = np.expand_dims(rgb2float(np.asarray(content)),axis = 0)
+    return content
+
 class reader(op_base):
 
     def __init__(self,args):
@@ -100,6 +106,7 @@ class reader(op_base):
         init_array = []
 
         for one in choice_batch:
+            print(one)
             image_content = cv2.imread(os.path.join(data_path,one))
             init_array.append(image_content)
 
@@ -116,6 +123,8 @@ class reader(op_base):
         init_array = rgb2float(np.asarray(init_array))
 
         return init_array
+
+
 
 
 class mnist():
