@@ -20,6 +20,13 @@ class op_base(object):
         if(args.model == 'CGAN'):
             self.label_embedding_size = args.label_embedding_size
             self.input_noise_size = args.input_noise_size
+        if(args.model == 'SRGAN'):
+            self.init_g_epoch = args.init_g_epoch
+            self.model_init_g_save_path = os.path.join('model',self.model,'init_g_prarms')
+            if (not os.path.exists(self.model_init_g_save_path)):
+                if (not os.path.exists(os.path.join('model', self.model))):
+                    os.mkdir(os.path.join('model', self.model))
+                os.mkdir(self.model_init_g_save_path)
 
 
         self.alpha = 1
@@ -37,6 +44,8 @@ class op_base(object):
             if(not os.path.exists(os.path.join('model',self.model))):
                 os.mkdir(os.path.join('model',self.model))
             os.mkdir(self.model_save_path)
+
+
 
         self.generate_image_path = os.path.join('data',self.model,self.data_name + '_generate_image')
         if ( not os.path.exists(self.generate_image_path) ):

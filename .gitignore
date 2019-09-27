@@ -1,4 +1,4 @@
 model
 data/0
 data/SRGAN
-__pycache__
+__pycache__/

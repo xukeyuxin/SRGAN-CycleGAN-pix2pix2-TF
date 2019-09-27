@@ -137,34 +137,43 @@ class SRGAN(op_base):
         safe_log = 1e-12
         self.d_loss = tf.reduce_mean(- tf.log(self.d_real + safe_log) - tf.log(1 - self.d_fake + safe_log))
 
-        g_d_loss = 1e-3 * tf.reduce_mean(- tf.log(self.d_fake + safe_log))
+        self.g_d_loss = 1e-3 * tf.reduce_mean(- tf.log(self.d_fake + safe_log))
 
         mean_square_content = tf.square(self.fake - self.y)
         mean_square_content = tf.reshape(mean_square_content,
                                          [self.batch_size, reduce(lambda x,y: x * y, fake_shape[1:])])
-        g_mean_square = 1 * tf.reduce_mean(tf.reduce_sum(mean_square_content, axis=1))
+        self.g_mean_square = 1 * tf.reduce_mean(tf.reduce_sum(mean_square_content, axis=1))
 
         vgg_loss = self.VGG19(self.fake) - self.VGG19(self.y)
         vgg_loss_shape = vgg_loss.get_shape().as_list()
         mean_square_feature = tf.square(vgg_loss)
         mean_square_feature = tf.reshape(mean_square_feature,
                                          [self.batch_size, reduce(lambda x,y: x * y, vgg_loss_shape[1:])])
-        vgg_mean_square = 2e-6 * tf.reduce_mean(tf.reduce_sum(mean_square_feature, axis=1))
-        self.g_loss = g_d_loss + g_mean_square + vgg_mean_square
+        self.vgg_mean_square = 2e-6 * tf.reduce_mean(tf.reduce_sum(mean_square_feature, axis=1))
 
+        self.g_loss = self.g_d_loss + self.g_mean_square + self.vgg_mean_square
+
+
+        self.opt_mse = tf.train.AdamOptimizer(self.lr).minimize(self.g_mean_square,var_list = self.G.vars)
         self.opt_d = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
         self.opt_g = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
 
-        with tf.control_dependencies([self.opt_d,self.opt_g]):
-            return tf.no_op(name = 'optimizer')
+        # with tf.control_dependencies([self.opt_d,self.opt_g]):
+        #     return tf.no_op(name = 'optimizer')
+
+    def save_params(self,values):
+        print('start find')
+        for one in values:
+            print(one.name)
+        return
 
     def train(self,need_train = True,pretrain = False):
 
         optimizer = self.build_model()
         saver = tf.train.Saver()
         if (pretrain):
-            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
-            print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
+            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_init_g_save_path))
+            print('success restore %s' % tf.train.latest_checkpoint(self.model_init_g_save_path))
         if(need_train):
             print('start train')
             self.sess.run(tf.global_variables_initializer())
@@ -173,20 +182,30 @@ class SRGAN(op_base):
             x_data_list = os.listdir(x_data_path)
             y_data_list = os.listdir(y_data_path)
 
-            for i in range(self.epoch):
+            for i in range(self.init_g_epoch):
                 epoch_size = min(len(x_data_list), len(y_data_list))
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
-                    _, g_loss, d_loss,d_fake,d_real = self.sess.run(
-                        [optimizer, self.g_loss, self.d_loss,self.d_fake,self.d_real],
-                        feed_dict={self.x: one_batch_x,
-                                   self.y: one_batch_y})
 
-                    print(d_fake,d_real)
+                    g_mean_square,_ = self.sess.run([self.g_mean_square,self.opt_d],
+                                        feed_dict={self.x: one_batch_x,self.y: one_batch_y})
+
+                    print(g_mean_square)
+
                 saver.save(self.sess,
-                           os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
-                print(g_loss, d_loss)
+                           os.path.join(self.model_init_g_save_path, 'checkpoint_init_g' + '-' + str(i) + '-' + str(batch_time)))
+
+
+
+                    # _, g_loss, d_loss,d_fake,d_real = self.sess.run(
+                    #     [optimizer, self.g_loss, self.d_loss,self.d_fake,self.d_real],
+                    #     feed_dict={self.x: one_batch_x,
+                    #                self.y: one_batch_y})
+                # saver.save(self.sess,
+                #            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
+                # print(g_loss, d_loss)
+
 
     def test(self):
         pass

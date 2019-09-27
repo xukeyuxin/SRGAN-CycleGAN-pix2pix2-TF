@@ -64,7 +64,8 @@ elif(model == 'CGAN'):
 elif(model == 'SRGAN'):
     tf.flags.DEFINE_integer('batch_size', 5, 'batch size, default: 16')
     tf.flags.DEFINE_string('data_name', 'MixImage', 'test_type, default: FuzzyImage')
-    tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
+    tf.flags.DEFINE_integer('init_g_epoch', 100, 'test_type, default: 1000')
+    tf.flags.DEFINE_integer('epoch', 1000, 'test_type, default: 1000')
     tf.flags.DEFINE_integer('input_image_weight', 96, 'image size, default: 96')
     tf.flags.DEFINE_integer('input_image_height', 96, 'image size, default: 96')
     tf.flags.DEFINE_integer('output_image_weight', 384, 'image size, default: 384')
@@ -74,7 +75,7 @@ elif(model == 'SRGAN'):
 
 tf.flags.DEFINE_integer('lambda1', 10, 'lambda1, default: 10')
 
-tf.flags.DEFINE_float('lr', 2e-3,
+tf.flags.DEFINE_float('lr', 1e-4,
                       'initial learning rate for Adam, default: 0.0001')
 tf.flags.DEFINE_float('beta', 1,
                       'momentum term of Adam, default: 1')
