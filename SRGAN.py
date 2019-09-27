@@ -211,7 +211,7 @@ class SRGAN(op_base):
 
             for i in range(self.epoch):
                 epoch_size = min(len(x_data_list), len(y_data_list))
-                total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0,0,0
+                total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0,0,0,0,0
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
