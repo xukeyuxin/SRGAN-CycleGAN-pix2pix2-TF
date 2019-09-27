@@ -208,12 +208,13 @@ class SRGAN(op_base):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
 
-                    _, g_loss, d_loss,d_fake,d_real = self.sess.run(
-                        [optimizer, self.g_loss, self.d_loss,self.d_fake,self.d_real],
+                    _, g_loss,g_d_loss,g_mse,g_vgg, d_loss,d_fake,d_real = self.sess.run(
+                        [optimizer, self.g_loss,self.g_d_loss,self.g_mean_square,self.vgg_mean_square, self.d_loss,self.d_fake,self.d_real],
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
                     print(d_fake)
                     print(d_real)
+                    print('find g-loss: %s - %s - %s' % (g_d_loss,g_mse,g_vgg))
 
                 saver.save(self.sess,
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
