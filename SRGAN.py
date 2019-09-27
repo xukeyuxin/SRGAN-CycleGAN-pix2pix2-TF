@@ -211,7 +211,7 @@ class SRGAN(op_base):
 
             for i in range(self.epoch):
                 epoch_size = min(len(x_data_list), len(y_data_list))
-                total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0,0,0,0,0
+                total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0.,0.,0.,0.,0
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
@@ -229,10 +229,10 @@ class SRGAN(op_base):
                     total_vgg_loss += g_vgg
                     iter += 1
 
-                    print('find d-loss: %s' % (total_d_loss // iter))
-                    print('find g_d-loss: %s' % (total_g_d_loss // iter))
-                    print('find g_mse-loss: %s' % (total_mse_loss // iter))
-                    print('find g_vgg-loss: %s' % (total_vgg_loss // iter))
+                    print('find d-loss: %s' % (total_d_loss / iter))
+                    print('find g_d-loss: %s' % (total_g_d_loss / iter))
+                    print('find g_mse-loss: %s' % (total_mse_loss / iter))
+                    print('find g_vgg-loss: %s' % (total_vgg_loss / iter))
 
                 saver.save(self.sess,
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
