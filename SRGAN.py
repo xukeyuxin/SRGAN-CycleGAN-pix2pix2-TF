@@ -189,7 +189,7 @@ class SRGAN(op_base):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
 
-                    g_mean_square,fake,_ = self.sess.run([self.g_mean_square,self.fake,self.opt_d],
+                    g_mean_square,fake,_ = self.sess.run([self.g_mean_square,self.fake,self.opt_g],
                                         feed_dict={self.x: one_batch_x,self.y: one_batch_y})
 
                     mse_total += g_mean_square
