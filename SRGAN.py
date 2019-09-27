@@ -170,7 +170,7 @@ class SRGAN(op_base):
     def train(self,need_train = True,pretrain = False):
 
         optimizer = self.build_model()
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep = 1)
         self.sess.run(tf.global_variables_initializer())
         if (pretrain):
             saver.restore(self.sess, tf.train.latest_checkpoint(self.model_init_g_save_path))

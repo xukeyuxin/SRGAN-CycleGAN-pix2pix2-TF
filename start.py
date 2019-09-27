@@ -62,7 +62,7 @@ elif(model == 'CGAN'):
     tf.flags.DEFINE_integer('input_image_channels', 1, 'image size, default: 3')
 
 elif(model == 'SRGAN'):
-    tf.flags.DEFINE_integer('batch_size', 5, 'batch size, default: 16')
+    tf.flags.DEFINE_integer('batch_size', 10, 'batch size, default: 16')
     tf.flags.DEFINE_string('data_name', 'MixImage', 'test_type, default: FuzzyImage')
     tf.flags.DEFINE_integer('init_g_epoch', 100, 'test_type, default: 1000')
     tf.flags.DEFINE_integer('epoch', 1000, 'test_type, default: 1000')
