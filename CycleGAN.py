@@ -183,6 +183,7 @@ class CycleGAN(op_base):
 
             for i in range(self.epoch):
                 epoch_size = min(len(x_data_list), len(y_data_list))
+                total_g_loss, total_f_loss, total_Y_D_loss, total_X_D_loss, iter = 0., 0., 0., 0., 0
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(batch_time, y_data_list, y_data_path)
@@ -191,9 +192,18 @@ class CycleGAN(op_base):
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
 
+                    total_g_loss += g_loss
+                    total_f_loss += f_loss
+                    total_Y_D_loss += Y_D_loss
+                    total_X_D_loss += X_D_loss
+
                 saver.save(self.sess,
                            os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
-                print(g_loss, f_loss, Y_D_loss, X_D_loss)
+
+                print('find g_loss: %s' % (total_g_loss / iter))
+                print('find f_loss: %s' % (total_f_loss / iter))
+                print('find Y_D_loss: %s' % (total_Y_D_loss / iter))
+                print('find X_D_loss: %s' % (total_X_D_loss / iter))
 
     def test(self):
 
