@@ -80,7 +80,7 @@ class discriminator(object):
             input = ly.bn_layer(input, name='d_bn_3', gamma_initializer=tf.random_normal_initializer(1., 0.02))
             input = tf.nn.leaky_relu(input)
 
-            input = ly.conv2d(input, 256, strides=2, name='d_conv2d_4')
+            input = ly.conv2d(input, 256, strides=1, name='d_conv2d_4')
             input = ly.bn_layer(input, name='d_bn_4', gamma_initializer=tf.random_normal_initializer(1., 0.02))
             input = tf.nn.leaky_relu(input)
 
@@ -88,7 +88,7 @@ class discriminator(object):
             input = ly.bn_layer(input, name='d_bn_5', gamma_initializer=tf.random_normal_initializer(1., 0.02))
             input = tf.nn.leaky_relu(input)
 
-            input = ly.conv2d(input, 512, strides=2, name='d_conv2d_6')
+            input = ly.conv2d(input, 512, strides=1, name='d_conv2d_6')
             input = ly.bn_layer(input, name='d_bn_6', gamma_initializer=tf.random_normal_initializer(1., 0.02))
             input = tf.nn.leaky_relu(input)
 
@@ -189,7 +189,7 @@ class SRGAN(op_base):
             x_data_list = os.listdir(x_data_path)
             y_data_list = os.listdir(y_data_path)
 
-            #### train g_init
+            #### train g_init make mse_loss smaller
             # for i in range(self.init_g_epoch):
             #     mse_total,iter = 0, 0
             #     epoch_size = min(len(x_data_list), len(y_data_list))
@@ -209,6 +209,8 @@ class SRGAN(op_base):
             #                         'checkpoint_init_g' + '-' + str(i) + '-' + str(batch_time)))
             ##### mse loss 3262
 
+
+            #### train g,d with SRGAN make g_loss smaller
             for i in range(self.epoch):
                 epoch_size = min(len(x_data_list), len(y_data_list))
                 total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0.,0.,0.,0.,0

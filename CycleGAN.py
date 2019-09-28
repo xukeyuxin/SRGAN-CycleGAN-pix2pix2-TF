@@ -9,6 +9,7 @@ from tqdm import tqdm
 import random
 import os
 import cv2
+import math
 
 
 class generator(op_base):
@@ -23,52 +24,52 @@ class generator(op_base):
         input_shape = input.get_shape().as_list()
         input_channel = input_shape[-1]
         with tf.variable_scope(self.name, reuse=self.reuse):
-            input_0 = ly.conv2d(input, 64, kernel_size=4, strides=2, name='g_conv_0')  # [ -1, 128,128,64]
-            input_0 = ly.bn_layer(input_0, name='g_bn_0')
+            height = input.get_shape().as_list()[1]
 
-            input_1 = ly.conv2d(tf.nn.relu(input_0), 128, kernel_size=4, strides=2, name='g_conv_1')  # [ -1, 64,64,128]
-            input_1 = ly.bn_layer(input_1, name='g_bn_1')
+            ### 提取特征 防止图片边缘奇异
+            input = tf.pad(input, paddings=[[0, 0], [3, 3], [3, 3], [0, 0]], mode='REFLECT')
+            input = ly.conv2d(input, 64, kernel_size=7, strides=1, name='g_conv2d_0')
+            input = ly.bn_layer(input, name='g_bn_0')
+            input = tf.nn.relu(input)
 
-            input_2 = ly.conv2d(tf.nn.relu(input_1), 256, kernel_size=4, strides=2, name='g_conv_2')  # [ -1, 32,32,256]
-            input_2 = ly.bn_layer(input_2, name='g_bn_2')
+            input = ly.conv2d(input, 128, kernel_size=3, strides=2, name='g_conv2d_1')
+            input = ly.bn_layer(input, name='g_bn_1')
+            input = tf.nn.relu(input)
 
-            input_3 = ly.conv2d(tf.nn.relu(input_2), 512, kernel_size=4, strides=2, name='g_conv_3')  # [ -1, 16,16,512]
-            input_3 = ly.bn_layer(input_3, name='g_bn_3')
+            input = ly.conv2d(input, 256, kernel_size=3, strides=2, name='g_conv2d_2')
+            input = ly.bn_layer(input, name='g_bn_2')
+            input = tf.nn.relu(input)
 
-            deconv_height = input_3.get_shape().as_list()[1]
-            deconv_weight = input_3.get_shape().as_list()[2]
+            ### resnet
+            for i in range(8):
+                cell = ly.conv2d(input, 256, kernel_size=3, strides=1, name='g_conv2d_res_%s' % i)
+                cell = ly.bn_layer(cell, name='g_res_%s' % i)
+                cell = tf.nn.relu(cell)
+                input = cell
 
-            input_3_de = ly.deconv2d(tf.nn.relu(input_3), 512, deconv_height * 2, kernel_size=4, strides=2,
-                                     name='g_deconv_0')  # [-1,32,32,512]
-            input_3_de = tf.nn.dropout(input_3_de, 0.2)
-            input_3_de = ly.bn_layer(input_3_de, name='g_bn_4')
-            input_3_de = tf.concat([input_3_de, input_2], axis=3)
+            low_height = math.ceil((height + 6.) / 4)
 
-            input_2_de = ly.deconv2d(tf.nn.relu(input_3_de), 256, deconv_height * 4, kernel_size=4, strides=2,
-                                     name='g_deconv_1')  # [-1,64,64,256]
-            input_2_de = ly.bn_layer(input_2_de, name='g_bn_5')
-            input_2_de = tf.concat([input_2_de, input_1], axis=3)
+            input = ly.deconv2d(input, 128, low_height * 2, kernel_size=3, strides=2, name='g_deconv2d_0')
+            input = ly.bn_layer(input, name='g_bn_3')
+            input = tf.nn.relu(input)
 
-            input_1_de = ly.deconv2d(tf.nn.relu(input_2_de), 128, deconv_height * 8, kernel_size=4, strides=2,
-                                     name='g_deconv_2')  # [-1,128,128,128]
-            input_1_de = ly.bn_layer(input_1_de, name='g_bn_6')
-            input_1_de = tf.concat([input_1_de, input_0], axis=3)
+            input = ly.deconv2d(input, 64, low_height * 4  , kernel_size=3, strides=2, name='g_deconv2d_1')
+            input = ly.bn_layer(input, name='g_bn_4')
+            input = tf.nn.relu(input)
 
+            input = ly.conv2d(input, 3, kernel_size=7, strides=1, name='g_conv2d_3')
+            input = ly.bn_layer(input, name='g_bn_5')
+            input = tf.nn.tanh(input)
 
-            input_0_de = ly.deconv2d(tf.nn.relu(input_1_de), 3, deconv_height * 16, kernel_size=4, strides=2,
-                                     name='g_deconv_3')  # [-1,256,256,3]
-
-            input_0_de = tf.nn.tanh(input_0_de)
+            input = tf.image.resize_images(input, [height, height])
 
         self.reuse = True
 
-        return input_0_de
+        return input
 
     @property
     def vars(self):
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope = self.name)
-
-
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
 
 class discriminator(op_base):
@@ -82,28 +83,31 @@ class discriminator(op_base):
         input_shape = input.get_shape().as_list()
 
         with tf.variable_scope(self.name, reuse=self.reuse):
-            input_0 = ly.conv2d(input, 64, kernel_size=4, strides=2, name='d_conv_0')  # [-1,64,64,64]
-            input_0 = tf.nn.relu(ly.bn_layer(input_0, name='d_bn_0'))
+            input = ly.conv2d(input, 64, kernel_size=4, strides=2, name='d_conv_0')  # [-1,64,64,64]
+            input = ly.bn_layer(input, name='d_bn_0')
+            input = tf.nn.relu(input)
 
-            input_1 = ly.conv2d(input_0, 128, kernel_size=4, strides=2, name='d_conv_1')  # [-1,32,32,128]
-            input_1 = tf.nn.relu(ly.bn_layer(input_1, name='d_bn_1'))
+            input = ly.conv2d(input, 128, kernel_size=4, strides=2, name='d_conv_1')  # [-1,32,32,128]
+            input = ly.bn_layer(input, name='d_bn_1')
+            input = tf.nn.relu(input)
 
-            input_2 = ly.conv2d(input_1, 256, kernel_size=4, strides=2, name='d_conv_2')  # [-1,16,16,256]
-            input_2 = tf.nn.relu(ly.bn_layer(input_2, name='d_bn_2'))
+            input = ly.conv2d(input, 256, kernel_size=4, strides=2, name='d_conv_2')  # [-1,16,16,256]
+            input = ly.bn_layer(input, name='d_bn_2')
+            input = tf.nn.relu(input)
 
-            input_3 = ly.conv2d(input_2, 512, kernel_size=4, strides=1, name='d_conv_3')  # [-1,8,8,512]
-            input_3 = tf.nn.relu(ly.bn_layer(input_3, name='d_bn_3'))
+            input = ly.conv2d(input, 512, kernel_size=4, strides=2, name='d_conv_3')  # [-1,8,8,512]
+            input = ly.bn_layer(input, name='d_bn_3')
+            input = tf.nn.relu(input)
 
-            input_4 = ly.conv2d(input_3, 1, kernel_size=4, strides=1, name='d_conv_4',bias = True)
-
+            input = ly.conv2d(input, 1, kernel_size=4, strides=1, name='d_conv_4', bias=True)
+            input = tf.nn.sigmoid(input)
 
         self.reuse = True
-        return input_3
+        return input
 
     @property
     def vars(self):
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope = self.name)
-
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
 
 class CycleGAN(op_base):
@@ -150,30 +154,30 @@ class CycleGAN(op_base):
             tf.square(self.X_D(self.fake_x)))
 
         ### use sigmoid cross entropy
-        # self.Y_D_loss = - tf.reduce_mean( tf.log( tf.nn.sigmiod(self.Y_D(self.y) ) ) - tf.log(1 - tf.nn.sigmiod(self.Y_D(self.fake_y)) ) ) / 2
+        # self.Y_D_loss = - tf.reduce_mean( tf.log( self.Y_D(self.y ) ) - tf.log(1 - self.Y_D(self.fake_y) ) ) / 2
         # self.X_D_loss = - tf.reduce_mean( tf.log(self.X_D(self.x) ) - tf.log(1 - self.X_D(self.fake_x)) ) / 2
 
-        self.opt_g_Y = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
-        self.opt_f_X = tf.train.AdamOptimizer(self.lr).minimize(self.f_loss,var_list = self.F.vars)
+        self.opt_g_Y = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss, var_list=self.G.vars)
+        self.opt_f_X = tf.train.AdamOptimizer(self.lr).minimize(self.f_loss, var_list=self.F.vars)
 
-        self.opt_d_Y = tf.train.AdamOptimizer(self.lr).minimize(self.Y_D_loss,var_list = self.Y_D.vars)
-        self.opt_d_X = tf.train.AdamOptimizer(self.lr).minimize(self.X_D_loss,var_list = self.X_D.vars)
+        self.opt_d_Y = tf.train.AdamOptimizer(self.lr).minimize(self.Y_D_loss, var_list=self.Y_D.vars)
+        self.opt_d_X = tf.train.AdamOptimizer(self.lr).minimize(self.X_D_loss, var_list=self.X_D.vars)
 
         with tf.control_dependencies([self.opt_d_Y, self.opt_g_Y, self.opt_d_X, self.opt_f_X]):
             return tf.no_op(name='optimizer')
 
-    def train(self,need_train = True, pretrain = False):
+    def train(self, need_train=True, pretrain=False):
 
         optimizer = self.build_model()
         saver = tf.train.Saver()
         if (pretrain):
             saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
             print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
-        if(need_train):
+        if (need_train):
             print('start training')
             self.sess.run(tf.global_variables_initializer())
-            x_data_path = os.path.join('data',self.model, self.data_name, 'trainA')
-            y_data_path = os.path.join('data',self.model, self.data_name, 'trainB')
+            x_data_path = os.path.join('data', self.model, self.data_name, 'trainA')
+            y_data_path = os.path.join('data', self.model, self.data_name, 'trainB')
             x_data_list = os.listdir(x_data_path)
             y_data_list = os.listdir(y_data_path)
 
@@ -193,32 +197,33 @@ class CycleGAN(op_base):
 
     def test(self):
 
-        test_image_dir = os.path.join('data',self.model,self.data_name,'test' + self.test_type)
-        test_image_list =  os.listdir(test_image_dir)
+        test_image_dir = os.path.join('data', self.model, self.data_name, 'test' + self.test_type)
+        test_image_list = os.listdir(test_image_dir)
         random.shuffle(test_image_list)
         test_image_content = np.array([])
 
         for one in test_image_list:
             print(one)
             one = os.path.join(test_image_dir, one)
-            if(len(test_image_content) == self.batch_size):
+            if (len(test_image_content) == self.batch_size):
                 break
             content = cv2.imread(one)
-            if(content.shape[0] != self.input_image_height or content.shape[1] != self.input_image_weight):
-                content = cv2.resize(content,(self.input_image_height,self.input_image_weight),interpolation = cv2.INTER_LINEAR)
+            if (content.shape[0] != self.input_image_height or content.shape[1] != self.input_image_weight):
+                content = cv2.resize(content, (self.input_image_height, self.input_image_weight),
+                                     interpolation=cv2.INTER_LINEAR)
 
-            content = content.reshape([1,self.input_image_height,self.input_image_weight,self.input_image_channels])
+            content = content.reshape([1, self.input_image_height, self.input_image_weight, self.input_image_channels])
 
-            if(len(test_image_content) == 0 ):
+            if (len(test_image_content) == 0):
                 test_image_content = content
             else:
-                test_image_content = np.concatenate([test_image_content,content])
+                test_image_content = np.concatenate([test_image_content, content])
 
-        self.train(need_train = False, pretrain = True)
+        self.train(need_train=False, pretrain=True)
 
         write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
         if (self.test_type == 'A'):
             generate = self.sess.run(self.fake_y, feed_dict={self.x: test_image_content})
-        elif(self.test_type == 'B'):
-            generate = self.sess.run(self.fake_x,feed_dict = {self.y:test_image_content})
-        write_image(generate,self.generate_image_path,write_shape)
+        elif (self.test_type == 'B'):
+            generate = self.sess.run(self.fake_x, feed_dict={self.y: test_image_content})
+        write_image(generate, self.generate_image_path, write_shape)

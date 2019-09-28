@@ -75,7 +75,7 @@ elif(model == 'SRGAN'):
 
 tf.flags.DEFINE_integer('lambda1', 10, 'lambda1, default: 10')
 
-tf.flags.DEFINE_float('lr', 1e-4,
+tf.flags.DEFINE_float('lr', 1e-5,
                       'initial learning rate for Adam, default: 0.0001')
 tf.flags.DEFINE_float('beta', 1,
                       'momentum term of Adam, default: 1')
@@ -89,13 +89,14 @@ model_dict = {'CycleGAN':CycleGAN,
 if __name__=='__main__':
     config = tf.ConfigProto()
     # config.gpu_options.allow_growth = True
-    with tf.Session( config = config ) as sess:
-        Net = model_dict[model](sess, FLAGS, reader)
-        if(type == 'train'):
-            Net.train()
-        if(type == 'pretrain'):
-            Net.train(pretrain = True)
-        elif(type == 'test'):
-            Net.test()
+    with tf.device('gpu:1'):
+        with tf.Session( config = config ) as sess:
+            Net = model_dict[model](sess, FLAGS, reader)
+            if(type == 'train'):
+                Net.train()
+            if(type == 'pretrain'):
+                Net.train(pretrain = True)
+            elif(type == 'test'):
+                Net.test()
 
 
