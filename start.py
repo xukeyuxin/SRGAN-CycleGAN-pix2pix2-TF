@@ -40,8 +40,8 @@ tf.flags.DEFINE_integer('max_to_keep', 5, 'real_label, default: 5')
 
 
 if(model == 'CycleGAN'):
-    tf.flags.DEFINE_integer('batch_size', 16, 'batch size, default: 16')
-    tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
+    tf.flags.DEFINE_integer('batch_size', 5, 'batch size, default: 16')
+    tf.flags.DEFINE_integer('epoch', 500, 'test_type, default: 1000')
     tf.flags.DEFINE_string('data_name', 'horse_zebra_256', 'test_type, default: apple_orange')
     tf.flags.DEFINE_integer('input_image_weight', 256, 'image size, default: 128')
     tf.flags.DEFINE_integer('input_image_height', 256, 'image size, default: 128')
@@ -87,16 +87,16 @@ model_dict = {'CycleGAN':CycleGAN,
 
 
 if __name__=='__main__':
-    config = tf.ConfigProto()
+    config = tf.ConfigProto(allow_soft_placement = True)
     # config.gpu_options.allow_growth = True
-    with tf.device('gpu:1'):
-        with tf.Session( config = config ) as sess:
-            Net = model_dict[model](sess, FLAGS, reader)
-            if(type == 'train'):
-                Net.train()
-            if(type == 'pretrain'):
-                Net.train(pretrain = True)
-            elif(type == 'test'):
-                Net.test()
+    # with tf.device('gpu:0'):
+    with tf.Session( config = config ) as sess:
+        Net = model_dict[model](sess, FLAGS, reader)
+        if(type == 'train'):
+            Net.train()
+        if(type == 'pretrain'):
+            Net.train(pretrain = True)
+        elif(type == 'test'):
+            Net.test()
 
 
