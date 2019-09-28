@@ -191,7 +191,7 @@ class CycleGAN(op_base):
                         [optimizer, self.g_loss, self.f_loss, self.Y_D_loss, self.X_D_loss],
                         feed_dict={self.x: one_batch_x,
                                    self.y: one_batch_y})
-
+                    iter += 1
                     total_g_loss += g_loss
                     total_f_loss += f_loss
                     total_Y_D_loss += Y_D_loss
