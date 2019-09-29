@@ -88,8 +88,7 @@ model_dict = {'CycleGAN':CycleGAN,
 
 if __name__=='__main__':
     config = tf.ConfigProto(allow_soft_placement = True)
-    # config.gpu_options.allow_growth = True
-    # with tf.device('gpu:0'):
+    with tf.device('gpu:1'):
     with tf.Session( config = config ) as sess:
         Net = model_dict[model](sess, FLAGS, reader)
         if(type == 'train'):
