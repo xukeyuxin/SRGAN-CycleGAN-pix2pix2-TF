@@ -190,55 +190,55 @@ class SRGAN(op_base):
             x_data_list = os.listdir(x_data_path)
             y_data_list = os.listdir(y_data_path)
 
-            #### train g_init make mse_loss smaller
-            # for i in range(self.init_g_epoch):
-            #     mse_total,iter = 0, 0
-            #     epoch_size = min(len(x_data_list), len(y_data_list))
-            #     for batch_time in tqdm(range(epoch_size // self.batch_size)):
-            #         one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
-            #         one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
-            #
-            #         g_mean_square,fake,_ = self.sess.run([self.g_mean_square,self.fake,self.opt_g],
-            #                             feed_dict={self.x: one_batch_x,self.y: one_batch_y})
-            #
-            #         mse_total += g_mean_square
-            #         iter += 1
-            #         print(g_mean_square)
-            # print('mean : %s' % (mse_total // iter))
-            # saver.save(self.sess,
-            #            os.path.join(self.model_init_g_save_path,
-            #                         'checkpoint_init_g' + '-' + str(i) + '-' + str(batch_time)))
-            ##### mse loss 3262
-
-
-            #### train g,d with SRGAN make g_loss smaller
-            for i in range(self.epoch):
+            ### train g_init make mse_loss smaller
+            for i in range(self.init_g_epoch):
+                mse_total,iter = 0, 0
                 epoch_size = min(len(x_data_list), len(y_data_list))
-                total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0.,0.,0.,0.,0
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
                     one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
 
-                    _, d_loss, d_fake, d_real = self.sess.run([self.opt_d, self.d_loss,self.d_fake,self.d_real], feed_dict={self.x: one_batch_x,self.y: one_batch_y})
+                    g_mean_square,fake,_ = self.sess.run([self.g_mean_square,self.fake,self.opt_g],
+                                        feed_dict={self.x: one_batch_x,self.y: one_batch_y})
 
-                    _, g_loss,g_d_loss,g_mse,g_vgg = self.sess.run(
-                        [self.opt_g, self.g_loss,self.g_d_loss,self.g_mean_square,self.vgg_mean_square],
-                        feed_dict={self.x: one_batch_x,
-                                   self.y: one_batch_y})
-
-                    total_d_loss += d_loss
-                    total_g_d_loss += g_d_loss
-                    total_mse_loss += g_mse
-                    total_vgg_loss += g_vgg
+                    mse_total += g_mean_square
                     iter += 1
+                    print(g_mean_square)
+            print('mean : %s' % (mse_total // iter))
+            saver.save(self.sess,
+                       os.path.join(self.model_init_g_save_path,
+                                    'checkpoint_init_g' + '-' + str(i) + '-' + str(batch_time)))
+            #### mse loss 3262
 
-                    print('find d-loss: %s' % (total_d_loss / iter))
-                    print('find g_d-loss: %s' % (total_g_d_loss / iter))
-                    print('find g_mse-loss: %s' % (total_mse_loss / iter))
-                    print('find g_vgg-loss: %s' % (total_vgg_loss / iter))
 
-                saver.save(self.sess,
-                           os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
+            #### train g,d with SRGAN make g_loss smaller
+            # for i in range(self.epoch):
+            #     epoch_size = min(len(x_data_list), len(y_data_list))
+            #     total_d_loss,total_g_d_loss,total_mse_loss,total_vgg_loss,iter = 0.,0.,0.,0.,0
+            #     for batch_time in tqdm(range(epoch_size // self.batch_size)):
+            #         one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
+            #         one_batch_y = self.Reader.build_batch(self,batch_time, y_data_list, y_data_path)
+            #
+            #         _, d_loss, d_fake, d_real = self.sess.run([self.opt_d, self.d_loss,self.d_fake,self.d_real], feed_dict={self.x: one_batch_x,self.y: one_batch_y})
+            #
+            #         _, g_loss,g_d_loss,g_mse,g_vgg = self.sess.run(
+            #             [self.opt_g, self.g_loss,self.g_d_loss,self.g_mean_square,self.vgg_mean_square],
+            #             feed_dict={self.x: one_batch_x,
+            #                        self.y: one_batch_y})
+            #
+            #         total_d_loss += d_loss
+            #         total_g_d_loss += g_d_loss
+            #         total_mse_loss += g_mse
+            #         total_vgg_loss += g_vgg
+            #         iter += 1
+            #
+            #         print('find d-loss: %s' % (total_d_loss / iter))
+            #         print('find g_d-loss: %s' % (total_g_d_loss / iter))
+            #         print('find g_mse-loss: %s' % (total_mse_loss / iter))
+            #         print('find g_vgg-loss: %s' % (total_vgg_loss / iter))
+            #
+            #     saver.save(self.sess,
+            #                os.path.join(self.model_save_path, 'checkpoint' + '-' + str(i) + '-' + str(batch_time)))
 
     def test(self):
 
