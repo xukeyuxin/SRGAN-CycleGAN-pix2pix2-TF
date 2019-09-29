@@ -42,7 +42,7 @@ tf.flags.DEFINE_integer('max_to_keep', 5, 'real_label, default: 5')
 if(model == 'CycleGAN'):
     tf.flags.DEFINE_integer('batch_size', 5, 'batch size, default: 16')
     tf.flags.DEFINE_integer('epoch', 500, 'test_type, default: 1000')
-    tf.flags.DEFINE_string('data_name', 'horse_zebra_256', 'test_type, default: apple_orange')
+    tf.flags.DEFINE_string('data_name', 'apple_orange_256', 'test_type, default: apple_orange')
     tf.flags.DEFINE_integer('input_image_weight', 256, 'image size, default: 128')
     tf.flags.DEFINE_integer('input_image_height', 256, 'image size, default: 128')
     tf.flags.DEFINE_integer('output_image_weight', 256, 'image size, default: 256')
