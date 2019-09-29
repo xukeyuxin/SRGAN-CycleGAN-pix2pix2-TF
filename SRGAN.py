@@ -96,6 +96,7 @@ class discriminator(object):
             input = ly.bn_layer(input, name='d_bn_7', gamma_initializer=tf.random_normal_initializer(1., 0.02))
             input = tf.nn.leaky_relu(input)
 
+            print(input.shape)
             input = ly.fc(input, 1024, name='d_fc_0')
             input = tf.nn.leaky_relu(input)
 
@@ -180,8 +181,8 @@ class SRGAN(op_base):
         saver = tf.train.Saver(max_to_keep = 1)
         self.sess.run(tf.global_variables_initializer())
         if (pretrain):
-            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
-            print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
+            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_init_g_save_path))
+            print('success restore %s' % tf.train.latest_checkpoint(self.model_init_g_save_path))
         if(need_train):
             print('start train')
             x_data_path = os.path.join('data',self.model, self.data_name, 'FuzzyImage')
@@ -246,12 +247,12 @@ class SRGAN(op_base):
         # choose_batch_iter = random.choice( range(len(x_data_list) // self.batch_size ) )
         # one_batch_x = self.Reader.build_batch(self,choose_batch_iter, x_data_list, x_data_path)
 
-        test_image = test_one_image('fuzzy_cup.png')
-        self.batch_size = len(test_image)
+        test_image = test_one_image('fuzzy.png')
         self.train(pretrain=True, need_train=False)
-        fake = self.sess.run(self.fake,feed_dict = {self.x:test_image})
-
-        write_shape = [self.output_image_height,self.output_image_weight,self.input_image_channels]
-        write_image(fake,self.generate_image_path,write_shape)
+        # self.batch_size = len(test_image)
+        # fake = self.sess.run(self.fake,feed_dict = {self.x:test_image})
+        #
+        # write_shape = [self.output_image_height,self.output_image_weight,self.input_image_channels]
+        # write_image(fake,self.generate_image_path,write_shape)
 
 

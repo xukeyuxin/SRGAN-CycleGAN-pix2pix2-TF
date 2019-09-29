@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import layers as ly
-from utils import write_image
+from utils import *
 from op_base import op_base
 import logging
 from functools import reduce
@@ -207,33 +207,36 @@ class CycleGAN(op_base):
 
     def test(self):
 
-        test_image_dir = os.path.join('data', self.model, self.data_name, 'test' + self.test_type)
-        test_image_list = os.listdir(test_image_dir)
-        random.shuffle(test_image_list)
-        test_image_content = np.array([])
+        # test_image_dir = os.path.join('data', self.model, self.data_name, 'test' + self.test_type)
+        # test_image_list = os.listdir(test_image_dir)
+        # random.shuffle(test_image_list)
+        # test_image_content = np.array([])
+        #
+        # for one in test_image_list:
+        #     print(one)
+        #     one = os.path.join(test_image_dir, one)
+        #     if (len(test_image_content) == self.batch_size):
+        #         break
+        #     content = cv2.imread(one)
+        #     if (content.shape[0] != self.input_image_height or content.shape[1] != self.input_image_weight):
+        #         content = cv2.resize(content, (self.input_image_height, self.input_image_weight),
+        #                              interpolation=cv2.INTER_LINEAR)
+        #
+        #     content = content.reshape([1, self.input_image_height, self.input_image_weight, self.input_image_channels])
+        #
+        #     if (len(test_image_content) == 0):
+        #         test_image_content = content
+        #     else:
+        #         test_image_content = np.concatenate([test_image_content, content])
 
-        for one in test_image_list:
-            print(one)
-            one = os.path.join(test_image_dir, one)
-            if (len(test_image_content) == self.batch_size):
-                break
-            content = cv2.imread(one)
-            if (content.shape[0] != self.input_image_height or content.shape[1] != self.input_image_weight):
-                content = cv2.resize(content, (self.input_image_height, self.input_image_weight),
-                                     interpolation=cv2.INTER_LINEAR)
 
-            content = content.reshape([1, self.input_image_height, self.input_image_weight, self.input_image_channels])
-
-            if (len(test_image_content) == 0):
-                test_image_content = content
-            else:
-                test_image_content = np.concatenate([test_image_content, content])
-
+        test_image = test_one_image('horse.jpg')
+        self.batch_size = len(test_image)
         self.train(need_train=False, pretrain=True)
 
-        write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
         if (self.test_type == 'A'):
-            generate = self.sess.run(self.fake_y, feed_dict={self.x: test_image_content})
+            generate = self.sess.run(self.fake_y, feed_dict={self.x: test_image})
         elif (self.test_type == 'B'):
-            generate = self.sess.run(self.fake_x, feed_dict={self.y: test_image_content})
+            generate = self.sess.run(self.fake_x, feed_dict={self.y: test_image})
+        write_shape = [self.input_image_height, self.input_image_weight, self.input_image_channels]
         write_image(generate, self.generate_image_path, write_shape)
