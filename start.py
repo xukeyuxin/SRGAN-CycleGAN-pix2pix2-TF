@@ -89,13 +89,13 @@ model_dict = {'CycleGAN':CycleGAN,
 if __name__=='__main__':
     config = tf.ConfigProto(allow_soft_placement = True)
     with tf.device('gpu:1'):
-    with tf.Session( config = config ) as sess:
-        Net = model_dict[model](sess, FLAGS, reader)
-        if(type == 'train'):
-            Net.train()
-        if(type == 'pretrain'):
-            Net.train(pretrain = True)
-        elif(type == 'test'):
-            Net.test()
+        with tf.Session( config = config ) as sess:
+            Net = model_dict[model](sess, FLAGS, reader)
+            if(type == 'train'):
+                Net.train()
+            if(type == 'pretrain'):
+                Net.train(pretrain = True)
+            elif(type == 'test'):
+                Net.test()
 
 
