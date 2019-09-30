@@ -35,11 +35,13 @@ else:
 tf.flags.DEFINE_string('test_type', 'A', 'test_type, default: A')
 
 
-tf.flags.DEFINE_float('real_label', 0.9, 'real_label, default: 0.9')
+tf.flags.DEFINE_float('real_label', 0.9, 'real_label, default: faces.9')
 tf.flags.DEFINE_integer('max_to_keep', 5, 'real_label, default: 5')
 
 
 if(model == 'CycleGAN'):
+    tf.flags.DEFINE_float('lr', 1e-4,
+                          'initial learning rate for Adam, default: faces.0001')
     tf.flags.DEFINE_integer('batch_size', 5, 'batch size, default: 16')
     tf.flags.DEFINE_integer('epoch', 500, 'test_type, default: 1000')
     tf.flags.DEFINE_string('data_name', 'apple_orange_256', 'test_type, default: apple_orange')
@@ -50,6 +52,8 @@ if(model == 'CycleGAN'):
     tf.flags.DEFINE_integer('input_image_channels', 3, 'image size, default: 3')
 
 elif(model == 'CGAN'):
+    tf.flags.DEFINE_float('lr', 1e-3,
+                          'initial learning rate for Adam, default: faces.0001')
     tf.flags.DEFINE_integer('batch_size', 16, 'batch size, default: 16')
     tf.flags.DEFINE_integer('epoch', 100, 'test_type, default: 1000')
     tf.flags.DEFINE_integer('label_embedding_size', 10, 'label_embedding_size, default: 10')
@@ -62,6 +66,8 @@ elif(model == 'CGAN'):
     tf.flags.DEFINE_integer('input_image_channels', 1, 'image size, default: 3')
 
 elif(model == 'SRGAN'):
+    tf.flags.DEFINE_float('lr', 2e-6,
+                          'initial learning rate for Adam, default: faces.0001')
     tf.flags.DEFINE_integer('batch_size', 5, 'batch size, default: 16')
     tf.flags.DEFINE_string('data_name', 'MixImage', 'test_type, default: FuzzyImage')
     tf.flags.DEFINE_integer('init_g_epoch', 100, 'test_type, default: 1000')
@@ -75,8 +81,7 @@ elif(model == 'SRGAN'):
 
 tf.flags.DEFINE_integer('lambda1', 10, 'lambda1, default: 10')
 
-tf.flags.DEFINE_float('lr', 1e-4,
-                      'initial learning rate for Adam, default: 0.0001')
+
 tf.flags.DEFINE_float('beta', 1,
                       'momentum term of Adam, default: 1')
 
@@ -85,19 +90,23 @@ model_dict = {'CycleGAN':CycleGAN,
               'SRGAN':SRGAN}
 
 
-
 if __name__=='__main__':
-    gpu_num = "0"
-    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_num
-    with tf.device('gpu:%s' % gpu_num):
-        config = tf.ConfigProto(allow_soft_placement = True)
-        with tf.Session( config = config ) as sess:
-            Net = model_dict[model](sess, FLAGS, reader)
-            if(type == 'train'):
-                Net.train()
-            if(type == 'pretrain'):
-                Net.train(pretrain = True)
-            elif(type == 'test'):
-                Net.test()
+    device_num = "0"
+    if(sys.platform == 'darwin'):
+        device = 'cpu'
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_num
+        device = 'gpu'
+    with tf.device('%s:%s' % (device,device_num)):
+        gpu_options = tf.GPUOptions(allow_growth = True)
+    config = tf.ConfigProto(allow_soft_placement = True, gpu_options = gpu_options)
+    with tf.Session( config = config ) as sess:
+        Net = model_dict[model](sess, FLAGS, reader)
+        if(type == 'train'):
+            Net.train()
+        if(type == 'pretrain'):
+            Net.train(pretrain = True)
+        elif(type == 'test'):
+            Net.test()
 
 

@@ -1,4 +1,6 @@
 model
 data/0
+data/faces
+data/pix2pix
 data/SRGAN
 __pycache__/

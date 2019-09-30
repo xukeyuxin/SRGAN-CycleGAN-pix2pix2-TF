@@ -3,9 +3,9 @@ import cv2
 from tqdm import tqdm
 
 def make():
-    image_list = os.listdir(os.path.join('0'))
+    image_list = os.listdir(os.path.join('faces'))
     for one in tqdm(image_list):
-        read_path = os.path.join('0',one)
+        read_path = os.path.join('faces',one)
         image_content = cv2.imread(read_path)
         if(image_content.shape[0] >= 400 and image_content.shape[1] >= 400):
             # clear_write_path = os.path.join('SRGAN', 'ClearImage', one)

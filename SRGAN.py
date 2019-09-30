@@ -181,8 +181,8 @@ class SRGAN(op_base):
         saver = tf.train.Saver(max_to_keep = 1)
         self.sess.run(tf.global_variables_initializer())
         if (pretrain):
-            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_init_g_save_path))
-            print('success restore %s' % tf.train.latest_checkpoint(self.model_init_g_save_path))
+            saver.restore(self.sess, tf.train.latest_checkpoint(self.model_save_path))
+            print('success restore %s' % tf.train.latest_checkpoint(self.model_save_path))
         if(need_train):
             print('start train')
             x_data_path = os.path.join('data',self.model, self.data_name, 'FuzzyImage')
@@ -192,7 +192,7 @@ class SRGAN(op_base):
 
             ### train g_init make mse_loss smaller
             # for i in range(self.init_g_epoch):
-            #     mse_total,iter = 0, 0
+            #     mse_total,iter = faces, faces
             #     epoch_size = min(len(x_data_list), len(y_data_list))
             #     for batch_time in tqdm(range(epoch_size // self.batch_size)):
             #         one_batch_x = self.Reader.build_batch(self,batch_time, x_data_list, x_data_path)
@@ -209,6 +209,17 @@ class SRGAN(op_base):
             #                             'checkpoint_init_g' + '-' + str(i) + '-' + str(batch_time)))
             #### mse loss 3262
 
+            ### 防止梯度爆炸
+            # # 使用Adam梯度下降
+            # optimizer = tf.train.AdamOptimizer(learningrate)
+            #
+            # #     # 裁剪一下Gradient输出，最后的gradient都在[-1, 1]的范围内
+            # #     # 计算导数   cost为损失函数
+            # gradients = optimizer.compute_gradients(cost)
+            # #     # 限定导数值域-1到1
+            # capped_gradients = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gradients if grad is not None]
+            # #     # 将处理后的导数继续应用到BP算法中
+            #  train_op = optimizer.apply_gradients(capped_gradients)
 
             ### train g,d with SRGAN make g_loss smaller
             for i in range(self.epoch):
@@ -247,11 +258,10 @@ class SRGAN(op_base):
         # one_batch_x = self.Reader.build_batch(self,choose_batch_iter, x_data_list, x_data_path)
 
         test_image = test_one_image('fuzzy.png')
+        self.batch_size = len(test_image)
         self.train(pretrain=True, need_train=False)
-        # self.batch_size = len(test_image)
-        # fake = self.sess.run(self.fake,feed_dict = {self.x:test_image})
-        #
-        # write_shape = [self.output_image_height,self.output_image_weight,self.input_image_channels]
-        # write_image(fake,self.generate_image_path,write_shape)
+        fake = self.sess.run(self.fake,feed_dict = {self.x:test_image})
+        write_shape = [self.output_image_height,self.output_image_weight,self.input_image_channels]
+        write_image(fake,self.generate_image_path,write_shape)
 
 

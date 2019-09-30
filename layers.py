@@ -166,7 +166,7 @@ class vgg19(object):
         vgg_path = os.path.join('model','VGG19','vgg19-full.npy')
         self.npz = np.load(vgg_path,encoding = 'latin1', allow_pickle = True).item()
         # for i in sorted(self.npz.items()):
-        #     print('layer: %s  weight %s bias %s' % (i[0],i[1][0].shape,i[1][1].shape))
+        #     print('layer: %s  weight %s bias %s' % (i[faces],i[1][faces].shape,i[1][1].shape))
 
     def _conv2d(self,input,filter,name):
         with tf.variable_scope(name):
@@ -188,7 +188,7 @@ class vgg19(object):
         return tf.nn.max_pool(input,ksize = [1,2,2,1],strides = [1,2,2,1],padding = 'SAME',name = name)
 
     def prepare(self,input):
-        ### [-1,1] -> [0,255]
+        ### [-1,1] -> [faces,255]
         input = tf.image.resize_images(input,(224,224))
         input = 255. * (input + 1)
         red,green,blue = tf.split(input,3,axis = 3)
@@ -251,7 +251,7 @@ class vgg16(object):
         vgg_path = os.path.join('model','VGG16','vgg16.npy')
         self.npz = np.load(vgg_path,encoding = 'latin1', allow_pickle = True).item()
         # for i in sorted(self.npz.items()):
-        #     print('layer: %s  weight %s bias %s' % (i[0],i[1][0].shape,i[1][1].shape))
+        #     print('layer: %s  weight %s bias %s' % (i[faces],i[1][faces].shape,i[1][1].shape))
 
     def _conv2d(self,input,name):
         with tf.variable_scope(name):

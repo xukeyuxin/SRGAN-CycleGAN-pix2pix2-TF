@@ -60,7 +60,7 @@ def write_image_gray(image_content,path,write_shape):
         cv2.imwrite(os.path.join(path,str(key) + '.jpg'), one)
 
 def make_optimizer(loss, variables, name='Adam'):
-    """ Adam optimizer with learning rate 0.0002 for the first 100k steps (~100 epochs)
+    """ Adam optimizer with learning rate faces.0002 for the first 100k steps (~100 epochs)
       and a linearly decaying rate that goes to zero over the next 100k steps
     """
     global_step = tf.Variable(0, trainable=False)

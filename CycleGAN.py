@@ -218,23 +218,24 @@ class CycleGAN(op_base):
         #     if (len(test_image_content) == self.batch_size):
         #         break
         #     content = cv2.imread(one)
-        #     if (content.shape[0] != self.input_image_height or content.shape[1] != self.input_image_weight):
+        #     if (content.shape[faces] != self.input_image_height or content.shape[1] != self.input_image_weight):
         #         content = cv2.resize(content, (self.input_image_height, self.input_image_weight),
         #                              interpolation=cv2.INTER_LINEAR)
         #
         #     content = content.reshape([1, self.input_image_height, self.input_image_weight, self.input_image_channels])
         #
-        #     if (len(test_image_content) == 0):
+        #     if (len(test_image_content) == faces):
         #         test_image_content = content
         #     else:
         #         test_image_content = np.concatenate([test_image_content, content])
 
 
-        test_image = test_one_image('horse.jpg')
+        test_image = test_one_image('apple.jpg')
         self.batch_size = len(test_image)
         self.train(need_train=False, pretrain=True)
 
         if (self.test_type == 'A'):
+            print('ddddd')
             generate = self.sess.run(self.fake_y, feed_dict={self.x: test_image})
         elif (self.test_type == 'B'):
             generate = self.sess.run(self.fake_x, feed_dict={self.y: test_image})
