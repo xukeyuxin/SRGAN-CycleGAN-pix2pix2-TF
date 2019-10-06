@@ -141,10 +141,10 @@ class pix2pix(op_base):
         self.d_real = self.D(tf.concat([self.input_image,self.real_image], axis = 3))
 
         safe_log = 1e-12
-        self.d_loss = - tf.reduce_mean( tf.log( 1 - self.d_fake + safe_log ) ) - tf.reduce_mean( tf.log( 1 - self.d_fake + safe_log ) )
+        self.d_loss = - tf.reduce_mean( tf.log( 1 - self.d_fake + safe_log ) ) - tf.reduce_mean( tf.log( self.d_real + safe_log ) )
         self.g_loss_log = - tf.reduce_mean( tf.log(self.d_fake + safe_log) )
         self.g_loss_l1 = tf.reduce_mean(tf.abs( self.fake - self.real_image ))
-        self.g_loss = self.g_loss_log + self.g_loss_l1
+        self.g_loss = self.g_loss_log + 100 * self.g_loss_l1
 
 
         self.d_loss_summary = tf.summary.scalar('d_loss',self.d_loss)
@@ -206,7 +206,8 @@ class pix2pix(op_base):
         data_path = os.path.join('data', self.model, self.data_name, 'val')
         data_list = os.listdir(data_path)
 
-        image_a,image_b =  self.Reader.build_batch(self, batch_time, data_list, data_path)
+        batch_time = 0
+        image_a,image_b =  self.Reader.build_batch(batch_time, data_list, data_path)
         fake = self.sess.run(self.fake,feed_dict = {self.input_image: image_b, self.real_image: image_a })
 
         write_shape = [self.output_image_height, self.output_image_weight, self.input_image_channels]
