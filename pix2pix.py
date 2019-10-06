@@ -189,6 +189,7 @@ class pix2pix(op_base):
                     ### first time d
                     _,d_loss,g_loss,d_sum_str,g_sum_str = self.sess.run([optimizer,self.d_loss,self.g_loss,self.d_sum,self.g_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
                     self.writer.add_summary(d_sum_str,counter)
+                    self.writer.add_summary(g_sum_str, counter)
                     d_loss_total += d_loss
                     g_loss_total += g_loss
                     one_batch_counter += 1
