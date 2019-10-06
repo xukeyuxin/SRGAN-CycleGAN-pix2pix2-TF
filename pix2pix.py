@@ -144,6 +144,7 @@ class pix2pix(op_base):
         self.d_loss = - tf.reduce_mean( tf.log( 1 - self.d_fake + safe_log ) ) - tf.reduce_mean( tf.log( self.d_real + safe_log ) )
         self.g_loss_log = - tf.reduce_mean( tf.log(self.d_fake + safe_log) )
         self.g_loss_l1 = tf.reduce_mean(tf.abs( self.fake - self.real_image ))
+        # self.g_loss = self.g_loss_log + 100 * self.g_loss_l1
         self.g_loss = self.g_loss_log + 100 * self.g_loss_l1
 
 
@@ -152,14 +153,14 @@ class pix2pix(op_base):
         self.g_loss_l1_summary = tf.summary.scalar('g_loss_l1',self.g_loss_l1)
 
         self.d_opt = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
-        self.g_opt = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.G.vars)
+        self.g_opt = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
 
-        # with tf.control_dependencies([self.d_opt,self.g_opt]):
-        #     return tf.no_op(name = 'optimizer')
+        with tf.control_dependencies([self.d_opt,self.g_opt]):
+            return tf.no_op(name = 'optimizer')
 
     def train(self,need_train = True,pretrain = False):
 
-        self.build()
+        optimizer = self.build()
         self.saver = tf.train.Saver(max_to_keep = 1)
         self.sess.run(tf.global_variables_initializer())
 
@@ -179,21 +180,28 @@ class pix2pix(op_base):
 
             for i in range(self.epoch):
                 epoch_size = len(data_list)
-
+                d_loss_total = 0.
+                g_loss_total = 0.
+                one_batch_counter = 0
                 for batch_time in tqdm(range(epoch_size // self.batch_size)):
                     image_a,image_b = self.Reader.build_batch(batch_time, data_list, data_path)
 
                     ### first time d
-                    _,d_loss,d_sum_str = self.sess.run([self.d_opt,self.d_loss,self.d_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
+                    _,d_loss,g_loss,d_sum_str,g_sum_str = self.sess.run([optimizer,self.d_loss,self.g_loss,self.d_sum,self.g_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
                     self.writer.add_summary(d_sum_str,counter)
+                    d_loss_total += d_loss
+                    g_loss_total += g_loss
+                    one_batch_counter += 1
+                    print('d_loss: %s g_loss: %s' % ( d_loss_total / one_batch_counter, g_loss_total / one_batch_counter ))
 
-                    ### first time g
-                    _,g_loss_log,g_loss_l1,g_sum_str = self.sess.run([self.g_opt,self.g_loss_log,self.g_loss_l1,self.g_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
-                    self.writer.add_summary(g_sum_str,counter)
-
-                    ### second time g
-                    _,g_sum_str = self.sess.run([self.g_opt,self.g_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
-                    self.writer.add_summary(g_sum_str, counter)
+                    # ### first time g
+                    # _,g_loss_log,g_loss_l1,g_sum_str = self.sess.run([self.g_opt,self.g_loss_log,self.g_loss_l1,self.g_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
+                    # self.writer.add_summary(g_sum_str,counter)
+                    #
+                    # # print(d_loss)
+                    # ### second time g
+                    # _,g_sum_str = self.sess.run([self.g_opt,self.g_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
+                    # self.writer.add_summary(g_sum_str, counter)
 
                     counter += 1
 
