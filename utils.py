@@ -33,7 +33,7 @@ def build_data():
         print('finish count %s' % count)
 
 def rgb2float(input):
-    return input / 127.5 - 1
+    return input / 127.5 - 1.
 
 def float2rgb(input):
     return tf.image.convert_image_dtype((input + 1.0) / 2.0, tf.uint8)
@@ -123,7 +123,31 @@ class reader(op_base):
 
         return init_array
 
+class pix2pix_reader(op_base):
 
+    def __init__(self,args):
+        op_base.__init__(self,args)
+
+    def build_batch(self,batch_time,data_list,data_path):
+
+        start_count = batch_time * self.batch_size
+        end_count = (batch_time + 1) * self.batch_size
+        choice_batch = data_list[start_count:end_count]
+        a_array = []
+        b_array = []
+
+        for one in choice_batch:
+            image_content = cv2.imread(os.path.join(data_path,one))
+            image_a,image_b = np.split(image_content,2,axis = 1)
+            image_a = image_a[:self.input_image_height,:self.input_image_weight]
+            image_b = image_b[:self.input_image_height,:self.input_image_weight]
+            a_array.append(image_a)
+            b_array.append(image_b)
+
+        a_array = rgb2float(np.asarray(a_array))
+        b_array = rgb2float(np.asarray(b_array))
+
+        return a_array, b_array
 
 
 class mnist():

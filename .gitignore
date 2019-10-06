@@ -4,3 +4,4 @@ data/faces
 data/pix2pix
 data/SRGAN
 __pycache__/
+logs/

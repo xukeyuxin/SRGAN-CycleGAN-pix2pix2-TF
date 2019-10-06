@@ -3,6 +3,8 @@ from utils import reader
 from CycleGAN import CycleGAN
 from CGAN import CGAN
 from SRGAN import SRGAN
+from pix2pix import pix2pix
+from utils import pix2pix_reader
 import numpy as np
 import os
 import random
@@ -77,6 +79,16 @@ elif(model == 'SRGAN'):
     tf.flags.DEFINE_integer('output_image_weight', 384, 'image size, default: 384')
     tf.flags.DEFINE_integer('output_image_height', 384, 'image size, default: 384')
     tf.flags.DEFINE_integer('input_image_channels', 3, 'image size, default: 3')
+elif(model == 'pix2pix'):
+    tf.flags.DEFINE_string('data_name', 'maps', 'test_type, default: FuzzyImage')
+    tf.flags.DEFINE_float('lr', 1e-4,'learn rate, default: 1e-3')
+    tf.flags.DEFINE_integer('batch_size', 16, 'batch size, default: 16')
+    tf.flags.DEFINE_integer('epoch', 1000, 'test_type, default: 1000')
+    tf.flags.DEFINE_integer('input_image_weight', 256, 'image size, default: 96')
+    tf.flags.DEFINE_integer('input_image_height', 256, 'image size, default: 96')
+    tf.flags.DEFINE_integer('output_image_weight', 256, 'image size, default: 384')
+    tf.flags.DEFINE_integer('output_image_height', 256, 'image size, default: 384')
+    tf.flags.DEFINE_integer('input_image_channels', 3, 'image size, default: 3')
 
 
 tf.flags.DEFINE_integer('lambda1', 10, 'lambda1, default: 10')
@@ -87,8 +99,13 @@ tf.flags.DEFINE_float('beta', 1,
 
 model_dict = {'CycleGAN':CycleGAN,
               'CGAN':CGAN,
-              'SRGAN':SRGAN}
+              'SRGAN':SRGAN,
+              'pix2pix':pix2pix}
 
+reader_dict = {'CycleGAN':reader,
+              'CGAN':reader,
+              'SRGAN':reader,
+              'pix2pix':pix2pix_reader}
 
 if __name__=='__main__':
     device_num = "0"
@@ -101,7 +118,7 @@ if __name__=='__main__':
         gpu_options = tf.GPUOptions(allow_growth = True)
     config = tf.ConfigProto(allow_soft_placement = True, gpu_options = gpu_options)
     with tf.Session( config = config ) as sess:
-        Net = model_dict[model](sess, FLAGS, reader)
+        Net = model_dict[model](sess, FLAGS, reader_dict[model])
         if(type == 'train'):
             Net.train()
         if(type == 'pretrain'):
