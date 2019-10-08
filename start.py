@@ -93,7 +93,6 @@ elif(model == 'pix2pix'):
 
 tf.flags.DEFINE_integer('lambda1', 10, 'lambda1, default: 10')
 
-
 tf.flags.DEFINE_float('beta', 1,
                       'momentum term of Adam, default: 1')
 

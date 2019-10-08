@@ -148,10 +148,6 @@ class pix2pix(op_base):
         self.g_loss = self.g_loss_log + 100 * self.g_loss_l1
 
 
-        self.d_loss_summary = tf.summary.scalar('d_loss',self.d_loss)
-        self.g_loss_log_summary = tf.summary.scalar('g_loss_log',self.g_loss_log)
-        self.g_loss_l1_summary = tf.summary.scalar('g_loss_l1',self.g_loss_l1)
-
         self.d_opt = tf.train.AdamOptimizer(self.lr).minimize(self.d_loss,var_list = self.D.vars)
         self.g_opt = tf.train.AdamOptimizer(self.lr).minimize(self.g_loss,var_list = self.G.vars)
 
@@ -164,19 +160,25 @@ class pix2pix(op_base):
         self.saver = tf.train.Saver(max_to_keep = 1)
         self.sess.run(tf.global_variables_initializer())
 
+        ### summary
+        d_loss_summary = tf.summary.scalar('d_loss', self.d_loss)
+        g_loss_log_summary = tf.summary.scalar('g_loss_log', self.g_loss_log)
+        g_loss_l1_summary = tf.summary.scalar('g_loss_l1', self.g_loss_l1)
+        fake_summary = tf.summary.image('g_fake', self.fake)
+
+        self.scalar_sum = tf.summary.merge([d_loss_summary, g_loss_log_summary, g_loss_l1_summary])
+        self.image_sum = tf.summary.merge([fake_summary])
+        self.writer = tf.summary.FileWriter('./logs', self.sess.graph)
+        counter = 1
+
         if(pretrain):
             self.saver.restore( self.sess,tf.train.latest_checkpoint(self.model_save_path) )
             print('sucess restore %s' % tf.train.latest_checkpoint(self.model_save_path) )
 
         if(need_train):
-            self.d_sum = tf.summary.merge([self.d_loss_summary])
-            self.g_sum = tf.summary.merge([self.g_loss_log_summary,self.g_loss_l1_summary])
-            self.writer = tf.summary.FileWriter('./logs',self.sess.graph)
 
             data_path = os.path.join('data',self.model, self.data_name, 'train')
             data_list = os.listdir(data_path)
-
-            counter = 1
 
             for i in range(self.epoch):
                 epoch_size = len(data_list)
@@ -187,9 +189,11 @@ class pix2pix(op_base):
                     image_a,image_b = self.Reader.build_batch(batch_time, data_list, data_path)
 
                     ### first time d
-                    _,d_loss,g_loss,d_sum_str,g_sum_str = self.sess.run([optimizer,self.d_loss,self.g_loss,self.d_sum,self.g_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
-                    self.writer.add_summary(d_sum_str,counter)
-                    self.writer.add_summary(g_sum_str, counter)
+                    _,d_loss,g_loss,scalar_item,image_item= self.sess.run([optimizer,self.d_loss,self.g_loss,self.scalar_sum,self.image_sum],feed_dict = { self.input_image: image_b, self.real_image:image_a })
+
+                    self.writer.add_summary(scalar_item,counter)
+                    self.writer.add_summary(image_item, counter)
+
                     d_loss_total += d_loss
                     g_loss_total += g_loss
                     one_batch_counter += 1
@@ -217,7 +221,9 @@ class pix2pix(op_base):
 
         batch_time = 0
         image_a,image_b =  self.Reader.build_batch(batch_time, data_list, data_path)
-        fake = self.sess.run(self.fake,feed_dict = {self.input_image: image_b, self.real_image: image_a })
+        fake,image_sum = self.sess.run([self.fake,self.image_sum],feed_dict = {self.input_image: image_b, self.real_image: image_a })
+
+        self.writer.add_summary(image_sum,0)
 
         write_shape = [self.output_image_height, self.output_image_weight, self.input_image_channels]
         write_image(fake,self.generate_image_path,write_shape)
