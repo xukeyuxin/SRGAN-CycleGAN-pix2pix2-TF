@@ -22,7 +22,6 @@ else:
     type = sys_input[2]
 
 
-
 FLAGS = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('model',model,'model type, default: CycleGAN')

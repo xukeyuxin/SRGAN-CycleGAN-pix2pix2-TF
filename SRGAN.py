@@ -257,7 +257,7 @@ class SRGAN(op_base):
         # choose_batch_iter = random.choice( range(len(x_data_list) // self.batch_size ) )
         # one_batch_x = self.Reader.build_batch(self,choose_batch_iter, x_data_list, x_data_path)
 
-        test_image = test_one_image('fuzzy.png')
+        test_image = test_one_image('fuzzy.jpg')
         self.batch_size = len(test_image)
         self.train(pretrain=True, need_train=False)
         fake = self.sess.run(self.fake,feed_dict = {self.x:test_image})

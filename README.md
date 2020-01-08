@@ -1,29 +1,49 @@
 # GAN 
-this project include with CGAN,SRGAN,pix2pix,CycleGAN。
+include SRGAN,pix2pix,CycleGAN。
 
 
 ## SRGAN
+[paper](https://arxiv.org/abs/1609.04802)
 
-### data download
-[https://pan.baidu.com/s/1bcTTVMAEAiQv5QZ6YlMlgw]
+<div align="left">
+	<img src="https://github.com/xukeyuxin/GAN/blob/master/data/SRGAN/20190403185755389.png" width="80%" height="10%"/>
+</div>
 
-### run 
-```
+### train
+
+```python
 python start.py SRGAN train
+```
+
+### eval
+```python
+python start.py SRGAN test
+```
+
+### result
+<div align="left">
+	<img src="https://github.com/xukeyuxin/GAN/blob/master/data/SRGAN/MixImage_generate_image/mix.jpg" width="100%"/>
+</div>
+
+## pix2pix
+[paper](https://arxiv.org/abs/1611.07004)
+
+
+### trian
+```
+python start.py pix2pix train
 ```
 ### eval
 ```
-python start.py SRGAN test
+python start.py pix2pix test
 ```
-### model download 
-[https://pan.baidu.com/s/1IsSsiLRCywlWsXn_BGrtbg]
-
-
+### result
+<div align="left">
+	<img src="https://github.com/xukeyuxin/GAN/blob/master/data/pix2pix/maps_generate_images.jpg" width="100%"/>
+</div>
 
 ## CycleGAN
-
-### data download
-[https://pan.baidu.com/s/1pecFj9EgM-09TQvgtpy_hg]
+[paper](https://arxiv.org/abs/1703.10593)
 
 ### run
 ```
@@ -34,29 +54,8 @@ python start.py CycleGAN train
 python start.py CycleGAN test
 ```
 
-### model download
-[https://pan.baidu.com/s/1YaE-vy2CPJqm36Fpgb7SDA]
 
-
-## pix2pix
-
-### data download
-[https://pan.baidu.com/s/1DUe8A1J36aJZ5f3EMSwFTg]
-
-### run
-```
-python start.py pix2pix train
-```
-### test
-```
-python start.py pix2pix test
-```
-
-### model download
-[https://pan.baidu.com/s/1bT2OmSfr4Te1EgIFUfPTBA]
-
-
-## CGAN
+<!-- ## CGAN
 
 ### data download
 [https://pan.baidu.com/s/1TQiuEQt_9kO8Ky4jC-DKgg]
@@ -72,6 +71,17 @@ python start.py CGAN test
 
 ### model download
 [https://pan.baidu.com/s/1JWSTlzqZrgVyeTZk7f3BuQ]
+ -->
 
+
+## DOWNLOAD
+### SRGAN
+[data](https://pan.baidu.com/s/1bcTTVMAEAiQv5QZ6YlMlgw)  && [model](https://pan.baidu.com/s/1IsSsiLRCywlWsXn_BGrtbg)
+
+### pix2pix
+[data](https://pan.baidu.com/s/1DUe8A1J36aJZ5f3EMSwFTg) && [model](https://pan.baidu.com/s/1bT2OmSfr4Te1EgIFUfPTBA)
+
+### CycleGAN
+[data](https://pan.baidu.com/s/1pecFj9EgM-09TQvgtpy_hg) && [model](https://pan.baidu.com/s/1YaE-vy2CPJqm36Fpgb7SDA)
 
 
