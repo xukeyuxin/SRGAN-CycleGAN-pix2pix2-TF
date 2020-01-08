@@ -22,7 +22,7 @@ python start.py SRGAN test
 
 ### result
 <div align="left">
-	<img src="https://github.com/xukeyuxin/SRGAN-CycleGAN-pix2pix2-TF/blob/master/result/MixImage_generate_image/mix.jpg" width="100%"/>
+	<img src="https://github.com/xukeyuxin/SRGAN-CycleGAN-pix2pix2-TF/blob/master/result/mix.jpg" width="100%"/>
 </div>
 
 ## pix2pix
@@ -39,7 +39,7 @@ python start.py pix2pix test
 ```
 ### result
 <div align="left">
-	<img src="https://github.com/xukeyuxin/SRGAN-CycleGAN-pix2pix2-TF/blob/master/result/maps_generate_images.jpg" width="100%"/>
+	<img src="https://github.com/xukeyuxin/SRGAN-CycleGAN-pix2pix2-TF/blob/master/result/maps_generate_image.jpg" width="100%"/>
 </div>
 
 ## CycleGAN
