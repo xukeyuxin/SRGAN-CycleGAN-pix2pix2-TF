@@ -6,7 +6,7 @@ include SRGAN,pix2pix,CycleGAN。
 [paper](https://arxiv.org/abs/1609.04802)
 
 <div align="left">
-	<img src="https://github.com/xukeyuxin/GAN/blob/master/data/SRGAN/20190403185755389.png" width="80%" height="10%"/>
+	<img src="https://github.com/xukeyuxin/GAN/blob/master/result/20190403185755389.png" width="80%" height="10%"/>
 </div>
 
 ### train
@@ -22,7 +22,7 @@ python start.py SRGAN test
 
 ### result
 <div align="left">
-	<img src="https://github.com/xukeyuxin/GAN/blob/master/data/SRGAN/MixImage_generate_image/mix.jpg" width="100%"/>
+	<img src="https://github.com/xukeyuxin/GAN/blob/master/result/MixImage_generate_image/mix.jpg" width="100%"/>
 </div>
 
 ## pix2pix
@@ -39,7 +39,7 @@ python start.py pix2pix test
 ```
 ### result
 <div align="left">
-	<img src="https://github.com/xukeyuxin/GAN/blob/master/data/pix2pix/maps_generate_images.jpg" width="100%"/>
+	<img src="https://github.com/xukeyuxin/GAN/blob/master/result/maps_generate_images.jpg" width="100%"/>
 </div>
 
 ## CycleGAN
